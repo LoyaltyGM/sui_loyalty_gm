@@ -1,0 +1,4 @@
+build/*
+*sui.log*
+.DS_Store
+.idea
