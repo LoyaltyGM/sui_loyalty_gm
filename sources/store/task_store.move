@@ -25,6 +25,7 @@ module loyalty_gm::task_store {
     // ======== Error codes =========
 
     const EMaxTasksReached: u64 = 0;
+    const ETaskCompletedSupplyReached: u64 = 1;
 
     // ======== Structs =========
 
@@ -47,7 +48,7 @@ module loyalty_gm::task_store {
         /// The counter of the number of times the task has been completed
         completed_count: u64,
         /// The maximum number of times the task can be completed
-        // completed_supply: Option<u64>,
+        completed_supply: Option<u64>,
         /// The ID of the package that contains the function that needs to be executed
         package_id: ID,
         /// The name of the module that contains the function that needs to be executed
@@ -91,6 +92,7 @@ module loyalty_gm::task_store {
         name: vector<u8>,
         description: vector<u8>,
         reward_exp: u64,
+        completed_supply: Option<u64>,
         package_id: ID,
         module_name: vector<u8>,
         function_name: vector<u8>,
@@ -109,6 +111,7 @@ module loyalty_gm::task_store {
             description: string::utf8(description),
             lvl: if (lvl == 0)  option::none<u64>() else option::some(lvl),
             reward_exp,
+            completed_supply,
             completed_count: 0,
             package_id,
             module_name: string::utf8(module_name),
@@ -136,7 +139,12 @@ module loyalty_gm::task_store {
     */
     public(friend) fun increment_task_completed_count(store: &mut VecMap<ID, Task>, task_id: ID) {
         let task = get_mut_task(store, &task_id);
-        task.completed_count = task.completed_count + 1;
+        let new_count = task.completed_count + 1;
+        assert!(
+            option::is_none(&task.completed_supply) || new_count <= *option::borrow(&task.completed_supply),
+            ETaskCompletedSupplyReached
+        );
+        task.completed_count = new_count;
     }
 
     /**

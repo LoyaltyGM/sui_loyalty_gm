@@ -124,7 +124,7 @@ module loyalty_gm::test_utils {
 
     // ======== Utility functions: Tasks
 
-    public fun add_task(scenario: &mut Scenario, task_lvl: u64) {
+    public fun add_task(scenario: &mut Scenario, task_lvl: u64, completed_supply: u64) {
         test_scenario::next_tx(scenario, ADMIN);
         {
             let ls = test_scenario::take_shared<LoyaltySystem>(scenario);
@@ -141,6 +141,7 @@ module loyalty_gm::test_utils {
                 b"name",
                 b"description",
                 TASK_REWARD,
+                completed_supply,
                 object::id(&admin_cap),
                 b"module",
                 b"function_name",
