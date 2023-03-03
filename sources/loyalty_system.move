@@ -6,6 +6,7 @@
 module loyalty_gm::loyalty_system {
     use std::string::{Self, String};
     use std::vector::length;
+    use std::option::{Self};
 
     use sui::coin::Coin;
     use sui::dynamic_object_field as dof;
@@ -256,6 +257,7 @@ module loyalty_gm::loyalty_system {
         name: vector<u8>,
         description: vector<u8>,
         reward_xp: u64,
+        completed_supply: u64,
         package_id: ID,
         module_name: vector<u8>,
         function_name: vector<u8>,
@@ -270,6 +272,7 @@ module loyalty_gm::loyalty_system {
             name,
             description,
             reward_xp,
+            if (completed_supply == 0) option::none<u64>() else option::some(completed_supply),
             package_id,
             module_name,
             function_name,
