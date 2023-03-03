@@ -63,7 +63,7 @@ module loyalty_gm::token_tests {
 
     #[test]
     public fun start_task_test(): Scenario {
-        let (scenario_val, task_id) = add_task_test(0,0);
+        let (scenario_val, task_id) = add_task_test(0, 0);
         let scenario = &mut scenario_val;
 
         mint_token(scenario, get_USER_1());
@@ -83,7 +83,7 @@ module loyalty_gm::token_tests {
     #[test]
     #[expected_failure(abort_code = loyalty_gm::loyalty_token::EInvalidLvl)]
     public fun fail_start_task_test(): Scenario {
-        let (scenario_val, task_id) = add_task_test(1,0);
+        let (scenario_val, task_id) = add_task_test(1, 0);
         let scenario = &mut scenario_val;
 
         mint_token(scenario, get_USER_1());
@@ -169,7 +169,7 @@ module loyalty_gm::token_tests {
     #[test]
     #[expected_failure(abort_code = loyalty_gm::reward_store::ERewardPoolExceeded)]
     fun fail_claim_exceeded_reward_test() {
-        let (scenario_val, task_id) = add_task_test(0,0);
+        let (scenario_val, task_id) = add_task_test(0, 0);
         let scenario = &mut scenario_val;
         get_verifier(scenario);
 
@@ -194,7 +194,7 @@ module loyalty_gm::token_tests {
     #[test]
     #[expected_failure(abort_code = loyalty_gm::loyalty_token::EInvalidLvl)]
     fun fail_claim_reward_test() {
-        let (scenario_val, task_id) = add_task_test(0,0);
+        let (scenario_val, task_id) = add_task_test(0, 0);
         let scenario = &mut scenario_val;
         get_verifier(scenario);
 

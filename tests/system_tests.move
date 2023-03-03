@@ -12,7 +12,7 @@ module loyalty_gm::system_tests {
 
     use loyalty_gm::loyalty_system::{Self, LoyaltySystem, AdminCap};
     use loyalty_gm::system_store::{Self, SystemStore, SYSTEM_STORE};
-    use loyalty_gm::test_utils::{get_ADMIN, get_USER_1,get_USER_2, get_LS_NAME, get_LS_DESCRIPTION, get_LS_URL, get_LS_MAX_SUPPLY, get_LS_MAX_LVL, mint_sui, create_system_store, create_loyalty_system, get_TASK_REWARD, add_task, get_verifier, mint_token, start_task, finish_task, remove_task, get_REWARD_POOL_AMT, add_reward, add_fail_pool_reward, remove_reward, add_fail_lvl_reward};
+    use loyalty_gm::test_utils::{get_ADMIN, get_USER_1, get_USER_2, get_LS_NAME, get_LS_DESCRIPTION, get_LS_URL, get_LS_MAX_SUPPLY, get_LS_MAX_LVL, mint_sui, create_system_store, create_loyalty_system, get_TASK_REWARD, add_task, get_verifier, mint_token, start_task, finish_task, remove_task, get_REWARD_POOL_AMT, add_reward, add_fail_pool_reward, remove_reward, add_fail_lvl_reward};
 
     // ======== Errors =========
 
@@ -156,7 +156,7 @@ module loyalty_gm::system_tests {
     #[test]
     #[expected_failure(abort_code = loyalty_gm::task_store::ETaskCompletedSupplyReached)]
     public fun fail_finish_task_completed_supply_test() {
-        let (scenario_val, task_id) = add_task_test(0,1);
+        let (scenario_val, task_id) = add_task_test(0, 1);
         let scenario = &mut scenario_val;
 
         get_verifier(scenario);
@@ -175,7 +175,7 @@ module loyalty_gm::system_tests {
     #[test]
     #[expected_failure(abort_code = loyalty_gm::user_store::ETaskAlreadyDone)]
     public fun fail_start_task_twice_test() {
-        let (scenario_val, task_id) = add_task_test(0,0);
+        let (scenario_val, task_id) = add_task_test(0, 0);
         let scenario = &mut scenario_val;
 
         get_verifier(scenario);
@@ -193,7 +193,7 @@ module loyalty_gm::system_tests {
     #[test]
     #[expected_failure(abort_code = loyalty_gm::user_store::ETaskAlreadyDone)]
     public fun fail_finish_task_twice_test() {
-        let (scenario_val, task_id) = add_task_test(0,0);
+        let (scenario_val, task_id) = add_task_test(0, 0);
         let scenario = &mut scenario_val;
 
         get_verifier(scenario);
@@ -210,7 +210,7 @@ module loyalty_gm::system_tests {
     #[test]
     #[expected_failure(abort_code = loyalty_gm::user_store::ETaskNotStarted)]
     public fun fail_finish_not_started_task_test() {
-        let (scenario_val, task_id) = add_task_test(0,0);
+        let (scenario_val, task_id) = add_task_test(0, 0);
         let scenario = &mut scenario_val;
 
         get_verifier(scenario);
@@ -223,7 +223,7 @@ module loyalty_gm::system_tests {
 
     #[test]
     fun remove_task_test() {
-        let (scenario_val, task_id) = add_task_test(0,0);
+        let (scenario_val, task_id) = add_task_test(0, 0);
         let scenario = &mut scenario_val;
 
         remove_task(scenario, task_id);
