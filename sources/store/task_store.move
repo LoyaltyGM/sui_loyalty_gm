@@ -6,6 +6,7 @@
 module loyalty_gm::task_store {
     use std::string::{Self, String};
     use std::vector;
+    use std::option::{Self, Option};
 
     use sui::event::emit;
     use sui::object::{Self, ID};
@@ -31,14 +32,22 @@ module loyalty_gm::task_store {
         Task struct.
         This struct represents a task that the user can complete.
         The task is represented by a function that needs to be executed.
+        Task can be completed only once by the user.
     */
     struct Task has store, drop {
         id: ID,
-        lvl: u64,
+        /// The name of the task
         name: String,
+        /// The description of the task
         description: String,
+        /// The level required to start the task
+        lvl: Option<u64>,
         /// The amount of XP that the user will receive upon completing the task
         reward_exp: u64,
+        /// The counter of the number of times the task has been completed
+        // completed_count: u64,
+        /// The maximum number of times the task can be completed
+        // completed_supply: Option<u64>,
         /// The ID of the package that contains the function that needs to be executed
         package_id: ID,
         /// The name of the module that contains the function that needs to be executed
@@ -96,9 +105,9 @@ module loyalty_gm::task_store {
 
         let task = Task {
             id,
-            lvl,
             name: string::utf8(name),
             description: string::utf8(description),
+            lvl: if (lvl == 0)  option::none<u64>() else option::some(lvl),
             reward_exp,
             package_id,
             module_name: string::utf8(module_name),
@@ -122,17 +131,29 @@ module loyalty_gm::task_store {
     }
 
     /**
+        Returns the task for the given task ID.
+    */
+    public fun get_task(store: &VecMap<ID, Task>, task_id: &ID): &Task {
+        vec_map::get(store, task_id)
+    }
+
+    /**
         Returns the task ID for the given task name.
     */
     public fun get_task_lvl(store: &VecMap<ID, Task>, task_id: &ID): u64 {
-        vec_map::get(store, task_id).lvl
+        let task = vec_map::get(store, task_id);
+        if (option::is_none(&task.lvl)) {
+            0
+        } else {
+            *option::borrow(&task.lvl)
+        }
     }
 
     /**
         Returns the task reward amount for the given task ID.
     */
     public fun get_task_reward(store: &VecMap<ID, Task>, task_id: &ID): u64 {
-        vec_map::get(store, task_id).reward_exp
+        get_task(store, task_id).reward_exp
     }
 
     // ======= Private and Utility functions =======
