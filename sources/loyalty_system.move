@@ -311,7 +311,8 @@ module loyalty_gm::loyalty_system {
             task_id,
             user,
             reward_xp
-        )
+        );
+        task_store::increment_task_completed_count(&mut loyalty_system.tasks, task_id);
     }
 
     // ======= Public functions =======

@@ -45,7 +45,7 @@ module loyalty_gm::task_store {
         /// The amount of XP that the user will receive upon completing the task
         reward_exp: u64,
         /// The counter of the number of times the task has been completed
-        // completed_count: u64,
+        completed_count: u64,
         /// The maximum number of times the task can be completed
         // completed_supply: Option<u64>,
         /// The ID of the package that contains the function that needs to be executed
@@ -109,6 +109,7 @@ module loyalty_gm::task_store {
             description: string::utf8(description),
             lvl: if (lvl == 0)  option::none<u64>() else option::some(lvl),
             reward_exp,
+            completed_count: 0,
             package_id,
             module_name: string::utf8(module_name),
             function_name: string::utf8(function_name),
@@ -128,6 +129,14 @@ module loyalty_gm::task_store {
     */
     public(friend) fun remove_task(store: &mut VecMap<ID, Task>, task_id: ID) {
         vec_map::remove(store, &task_id);
+    }
+
+    /**
+        Increments the number of times the task has been completed.
+    */
+    public(friend) fun increment_task_completed_count(store: &mut VecMap<ID, Task>, task_id: ID) {
+        let task = get_mut_task(store, &task_id);
+        task.completed_count = task.completed_count + 1;
     }
 
     /**
@@ -154,6 +163,13 @@ module loyalty_gm::task_store {
     }
 
     // ======= Private and Utility functions =======
+
+    /**
+        Returns the mutable task for the given task ID.
+    */
+    public fun get_mut_task(store: &mut VecMap<ID, Task>, task_id: &ID): &mut Task {
+        vec_map::get_mut(store, task_id)
+    }
 
     /// Converts a vector of vectors of u8 to a vector of strings
     fun to_string_vec(args: vector<vector<u8>>): vector<String> {
