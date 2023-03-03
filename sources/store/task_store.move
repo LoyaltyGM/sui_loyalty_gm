@@ -142,11 +142,8 @@ module loyalty_gm::task_store {
     */
     public fun get_task_lvl(store: &VecMap<ID, Task>, task_id: &ID): u64 {
         let task = vec_map::get(store, task_id);
-        if (option::is_none(&task.lvl)) {
-            0
-        } else {
-            *option::borrow(&task.lvl)
-        }
+        if (option::is_some(&task.lvl)) *option::borrow(&task.lvl)
+        else 0
     }
 
     /**
