@@ -292,7 +292,7 @@ The token is minted with the same name, description and url as the LoyaltySystem
         name: nft.name,
     });
 
-    <a href="user_store.md#0x0_user_store_add_user">user_store::add_user</a>(<a href="loyalty_system.md#0x0_loyalty_system_get_mut_user_store">loyalty_system::get_mut_user_store</a>(ls), <a href="_id">object::id</a>(&nft), ctx);
+    <a href="user_store.md#0x0_user_store_add_user">user_store::add_user</a>(<a href="loyalty_system.md#0x0_loyalty_system_get_mut_user_store">loyalty_system::get_mut_user_store</a>(ls), &<a href="_id">object::id</a>(&nft), ctx);
     <a href="_transfer">transfer::transfer</a>(nft, sender);
 }
 </code></pre>
@@ -410,7 +410,8 @@ Verifier cant finish task if user didnt start it.
         token.lvl &gt;= <a href="task_store.md#0x0_task_store_get_task_lvl">task_store::get_task_lvl</a>(<a href="loyalty_system.md#0x0_loyalty_system_get_tasks">loyalty_system::get_tasks</a>(<a href="loyalty_system.md#0x0_loyalty_system">loyalty_system</a>), &task_id),
         <a href="loyalty_token.md#0x0_loyalty_token_EInvalidLvl">EInvalidLvl</a>
     );
-    <a href="user_store.md#0x0_user_store_start_task">user_store::start_task</a>(<a href="loyalty_system.md#0x0_loyalty_system_get_mut_user_store">loyalty_system::get_mut_user_store</a>(<a href="loyalty_system.md#0x0_loyalty_system">loyalty_system</a>), task_id, <a href="_sender">tx_context::sender</a>(ctx))
+    <a href="task_store.md#0x0_task_store_increment_task_started_count">task_store::increment_task_started_count</a>(<a href="loyalty_system.md#0x0_loyalty_system_get_mut_tasks">loyalty_system::get_mut_tasks</a>(<a href="loyalty_system.md#0x0_loyalty_system">loyalty_system</a>), &task_id);
+    <a href="user_store.md#0x0_user_store_start_task">user_store::start_task</a>(<a href="loyalty_system.md#0x0_loyalty_system_get_mut_user_store">loyalty_system::get_mut_user_store</a>(<a href="loyalty_system.md#0x0_loyalty_system">loyalty_system</a>), &task_id, <a href="_sender">tx_context::sender</a>(ctx))
 }
 </code></pre>
 

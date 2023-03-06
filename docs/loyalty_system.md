@@ -26,8 +26,9 @@ Module for creating and managing loyalty systems by the admin and verifying task
 -  [Function `remove_task`](#0x0_loyalty_system_remove_task)
 -  [Function `finish_task`](#0x0_loyalty_system_finish_task)
 -  [Function `get_mut_user_store`](#0x0_loyalty_system_get_mut_user_store)
--  [Function `increment_total_minted`](#0x0_loyalty_system_increment_total_minted)
+-  [Function `get_mut_tasks`](#0x0_loyalty_system_get_mut_tasks)
 -  [Function `get_mut_reward`](#0x0_loyalty_system_get_mut_reward)
+-  [Function `increment_total_minted`](#0x0_loyalty_system_increment_total_minted)
 -  [Function `get_name`](#0x0_loyalty_system_get_name)
 -  [Function `get_max_supply`](#0x0_loyalty_system_get_max_supply)
 -  [Function `get_total_minted`](#0x0_loyalty_system_get_total_minted)
@@ -45,6 +46,7 @@ Module for creating and managing loyalty systems by the admin and verifying task
 <b>use</b> <a href="system_store.md#0x0_system_store">0x0::system_store</a>;
 <b>use</b> <a href="task_store.md#0x0_task_store">0x0::task_store</a>;
 <b>use</b> <a href="user_store.md#0x0_user_store">0x0::user_store</a>;
+<b>use</b> <a href="">0x1::option</a>;
 <b>use</b> <a href="">0x1::string</a>;
 <b>use</b> <a href="">0x2::coin</a>;
 <b>use</b> <a href="">0x2::dynamic_object_field</a>;
@@ -662,7 +664,7 @@ Users can complete tasks to earn XP.
 
 
 
-<pre><code><b>public</b> entry <b>fun</b> <a href="loyalty_system.md#0x0_loyalty_system_add_task">add_task</a>(admin_cap: &<a href="loyalty_system.md#0x0_loyalty_system_AdminCap">loyalty_system::AdminCap</a>, <a href="loyalty_system.md#0x0_loyalty_system">loyalty_system</a>: &<b>mut</b> <a href="loyalty_system.md#0x0_loyalty_system_LoyaltySystem">loyalty_system::LoyaltySystem</a>, lvl: u64, name: <a href="">vector</a>&lt;u8&gt;, description: <a href="">vector</a>&lt;u8&gt;, reward_xp: u64, package_id: <a href="_ID">object::ID</a>, module_name: <a href="">vector</a>&lt;u8&gt;, function_name: <a href="">vector</a>&lt;u8&gt;, arguments: <a href="">vector</a>&lt;<a href="">vector</a>&lt;u8&gt;&gt;, ctx: &<b>mut</b> <a href="_TxContext">tx_context::TxContext</a>)
+<pre><code><b>public</b> entry <b>fun</b> <a href="loyalty_system.md#0x0_loyalty_system_add_task">add_task</a>(admin_cap: &<a href="loyalty_system.md#0x0_loyalty_system_AdminCap">loyalty_system::AdminCap</a>, <a href="loyalty_system.md#0x0_loyalty_system">loyalty_system</a>: &<b>mut</b> <a href="loyalty_system.md#0x0_loyalty_system_LoyaltySystem">loyalty_system::LoyaltySystem</a>, lvl: u64, name: <a href="">vector</a>&lt;u8&gt;, description: <a href="">vector</a>&lt;u8&gt;, reward_xp: u64, completed_supply: u64, package_id: <a href="_ID">object::ID</a>, module_name: <a href="">vector</a>&lt;u8&gt;, function_name: <a href="">vector</a>&lt;u8&gt;, arguments: <a href="">vector</a>&lt;<a href="">vector</a>&lt;u8&gt;&gt;, ctx: &<b>mut</b> <a href="_TxContext">tx_context::TxContext</a>)
 </code></pre>
 
 
@@ -678,6 +680,7 @@ Users can complete tasks to earn XP.
     name: <a href="">vector</a>&lt;u8&gt;,
     description: <a href="">vector</a>&lt;u8&gt;,
     reward_xp: u64,
+    completed_supply: u64,
     package_id: ID,
     module_name: <a href="">vector</a>&lt;u8&gt;,
     function_name: <a href="">vector</a>&lt;u8&gt;,
@@ -692,6 +695,7 @@ Users can complete tasks to earn XP.
         name,
         description,
         reward_xp,
+        <b>if</b> (completed_supply == 0) <a href="_none">option::none</a>&lt;u64&gt;() <b>else</b> <a href="_some">option::some</a>(completed_supply),
         package_id,
         module_name,
         function_name,
@@ -731,7 +735,7 @@ Remove a task from the loyalty system.
 ) {
     <a href="loyalty_system.md#0x0_loyalty_system_check_admin">check_admin</a>(admin_cap, <a href="loyalty_system.md#0x0_loyalty_system">loyalty_system</a>);
 
-    <a href="task_store.md#0x0_task_store_remove_task">task_store::remove_task</a>(&<b>mut</b> <a href="loyalty_system.md#0x0_loyalty_system">loyalty_system</a>.tasks, task_id);
+    <a href="task_store.md#0x0_task_store_remove_task">task_store::remove_task</a>(&<b>mut</b> <a href="loyalty_system.md#0x0_loyalty_system">loyalty_system</a>.tasks, &task_id);
 }
 </code></pre>
 
@@ -768,10 +772,11 @@ This function is called by publisher.
     <b>let</b> <a href="user_store.md#0x0_user_store">user_store</a> = <a href="loyalty_system.md#0x0_loyalty_system_get_mut_user_store">get_mut_user_store</a>(<a href="loyalty_system.md#0x0_loyalty_system">loyalty_system</a>);
     <a href="user_store.md#0x0_user_store_finish_task">user_store::finish_task</a>(
         <a href="user_store.md#0x0_user_store">user_store</a>,
-        task_id,
+        &task_id,
         user,
         reward_xp
-    )
+    );
+    <a href="task_store.md#0x0_task_store_increment_task_completed_count">task_store::increment_task_completed_count</a>(&<b>mut</b> <a href="loyalty_system.md#0x0_loyalty_system">loyalty_system</a>.tasks, &task_id);
 }
 </code></pre>
 
@@ -782,6 +787,9 @@ This function is called by publisher.
 <a name="0x0_loyalty_system_get_mut_user_store"></a>
 
 ## Function `get_mut_user_store`
+
+
+Get the mutable user store.
 
 
 
@@ -803,9 +811,63 @@ This function is called by publisher.
 
 </details>
 
+<a name="0x0_loyalty_system_get_mut_tasks"></a>
+
+## Function `get_mut_tasks`
+
+
+
+<pre><code><b>public</b>(<b>friend</b>) <b>fun</b> <a href="loyalty_system.md#0x0_loyalty_system_get_mut_tasks">get_mut_tasks</a>(<a href="loyalty_system.md#0x0_loyalty_system">loyalty_system</a>: &<b>mut</b> <a href="loyalty_system.md#0x0_loyalty_system_LoyaltySystem">loyalty_system::LoyaltySystem</a>): &<b>mut</b> <a href="_VecMap">vec_map::VecMap</a>&lt;<a href="_ID">object::ID</a>, <a href="task_store.md#0x0_task_store_Task">task_store::Task</a>&gt;
+</code></pre>
+
+
+
+<details>
+<summary>Implementation</summary>
+
+
+<pre><code><b>public</b>(<b>friend</b>) <b>fun</b> <a href="loyalty_system.md#0x0_loyalty_system_get_mut_tasks">get_mut_tasks</a>(<a href="loyalty_system.md#0x0_loyalty_system">loyalty_system</a>: &<b>mut</b> <a href="loyalty_system.md#0x0_loyalty_system_LoyaltySystem">LoyaltySystem</a>): &<b>mut</b> VecMap&lt;ID, Task&gt; {
+    &<b>mut</b> <a href="loyalty_system.md#0x0_loyalty_system">loyalty_system</a>.tasks
+}
+</code></pre>
+
+
+
+</details>
+
+<a name="0x0_loyalty_system_get_mut_reward"></a>
+
+## Function `get_mut_reward`
+
+
+Get the mutable reward.
+
+
+
+<pre><code><b>public</b>(<b>friend</b>) <b>fun</b> <a href="loyalty_system.md#0x0_loyalty_system_get_mut_reward">get_mut_reward</a>(<a href="loyalty_system.md#0x0_loyalty_system">loyalty_system</a>: &<b>mut</b> <a href="loyalty_system.md#0x0_loyalty_system_LoyaltySystem">loyalty_system::LoyaltySystem</a>, lvl: u64): &<b>mut</b> <a href="reward_store.md#0x0_reward_store_Reward">reward_store::Reward</a>
+</code></pre>
+
+
+
+<details>
+<summary>Implementation</summary>
+
+
+<pre><code><b>public</b>(<b>friend</b>) <b>fun</b> <a href="loyalty_system.md#0x0_loyalty_system_get_mut_reward">get_mut_reward</a>(<a href="loyalty_system.md#0x0_loyalty_system">loyalty_system</a>: &<b>mut</b> <a href="loyalty_system.md#0x0_loyalty_system_LoyaltySystem">LoyaltySystem</a>, lvl: u64): &<b>mut</b> Reward {
+    <a href="_get_mut">vec_map::get_mut</a>(&<b>mut</b> <a href="loyalty_system.md#0x0_loyalty_system">loyalty_system</a>.rewards, &lvl)
+}
+</code></pre>
+
+
+
+</details>
+
 <a name="0x0_loyalty_system_increment_total_minted"></a>
 
 ## Function `increment_total_minted`
+
+
+Increment the total minted count.
 
 
 
@@ -821,30 +883,6 @@ This function is called by publisher.
 <pre><code><b>public</b>(<b>friend</b>) <b>fun</b> <a href="loyalty_system.md#0x0_loyalty_system_increment_total_minted">increment_total_minted</a>(<a href="loyalty_system.md#0x0_loyalty_system">loyalty_system</a>: &<b>mut</b> <a href="loyalty_system.md#0x0_loyalty_system_LoyaltySystem">LoyaltySystem</a>) {
     <b>assert</b>!(<a href="loyalty_system.md#0x0_loyalty_system_get_total_minted">get_total_minted</a>(<a href="loyalty_system.md#0x0_loyalty_system">loyalty_system</a>) &lt;= <a href="loyalty_system.md#0x0_loyalty_system_get_max_supply">get_max_supply</a>(<a href="loyalty_system.md#0x0_loyalty_system">loyalty_system</a>), <a href="loyalty_system.md#0x0_loyalty_system_EMaxSupplyReached">EMaxSupplyReached</a>);
     <a href="loyalty_system.md#0x0_loyalty_system">loyalty_system</a>.total_minted = <a href="loyalty_system.md#0x0_loyalty_system">loyalty_system</a>.total_minted + 1;
-}
-</code></pre>
-
-
-
-</details>
-
-<a name="0x0_loyalty_system_get_mut_reward"></a>
-
-## Function `get_mut_reward`
-
-
-
-<pre><code><b>public</b>(<b>friend</b>) <b>fun</b> <a href="loyalty_system.md#0x0_loyalty_system_get_mut_reward">get_mut_reward</a>(<a href="loyalty_system.md#0x0_loyalty_system">loyalty_system</a>: &<b>mut</b> <a href="loyalty_system.md#0x0_loyalty_system_LoyaltySystem">loyalty_system::LoyaltySystem</a>, lvl: u64): &<b>mut</b> <a href="reward_store.md#0x0_reward_store_Reward">reward_store::Reward</a>
-</code></pre>
-
-
-
-<details>
-<summary>Implementation</summary>
-
-
-<pre><code><b>public</b>(<b>friend</b>) <b>fun</b> <a href="loyalty_system.md#0x0_loyalty_system_get_mut_reward">get_mut_reward</a>(<a href="loyalty_system.md#0x0_loyalty_system">loyalty_system</a>: &<b>mut</b> <a href="loyalty_system.md#0x0_loyalty_system_LoyaltySystem">LoyaltySystem</a>, lvl: u64): &<b>mut</b> Reward {
-    <a href="_get_mut">vec_map::get_mut</a>(&<b>mut</b> <a href="loyalty_system.md#0x0_loyalty_system">loyalty_system</a>.rewards, &lvl)
 }
 </code></pre>
 

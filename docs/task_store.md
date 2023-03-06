@@ -15,12 +15,17 @@ Its functions are only accessible by the friend modules.
 -  [Function `empty`](#0x0_task_store_empty)
 -  [Function `add_task`](#0x0_task_store_add_task)
 -  [Function `remove_task`](#0x0_task_store_remove_task)
+-  [Function `increment_task_started_count`](#0x0_task_store_increment_task_started_count)
+-  [Function `increment_task_completed_count`](#0x0_task_store_increment_task_completed_count)
+-  [Function `get_task`](#0x0_task_store_get_task)
 -  [Function `get_task_lvl`](#0x0_task_store_get_task_lvl)
 -  [Function `get_task_reward`](#0x0_task_store_get_task_reward)
+-  [Function `get_mut_task`](#0x0_task_store_get_mut_task)
 -  [Function `to_string_vec`](#0x0_task_store_to_string_vec)
 
 
-<pre><code><b>use</b> <a href="">0x1::string</a>;
+<pre><code><b>use</b> <a href="">0x1::option</a>;
+<b>use</b> <a href="">0x1::string</a>;
 <b>use</b> <a href="">0x1::vector</a>;
 <b>use</b> <a href="">0x2::event</a>;
 <b>use</b> <a href="">0x2::object</a>;
@@ -38,6 +43,7 @@ Its functions are only accessible by the friend modules.
 Task struct.
 This struct represents a task that the user can complete.
 The task is represented by a function that needs to be executed.
+Task can be completed only once by the user.
 
 
 
@@ -58,28 +64,46 @@ The task is represented by a function that needs to be executed.
 
 </dd>
 <dt>
-<code>lvl: u64</code>
-</dt>
-<dd>
-
-</dd>
-<dt>
 <code>name: <a href="_String">string::String</a></code>
 </dt>
 <dd>
-
+ The name of the task
 </dd>
 <dt>
 <code>description: <a href="_String">string::String</a></code>
 </dt>
 <dd>
-
+ The description of the task
+</dd>
+<dt>
+<code>lvl: <a href="_Option">option::Option</a>&lt;u64&gt;</code>
+</dt>
+<dd>
+ The level required to start the task
 </dd>
 <dt>
 <code>reward_exp: u64</code>
 </dt>
 <dd>
  The amount of XP that the user will receive upon completing the task
+</dd>
+<dt>
+<code>started_count: u64</code>
+</dt>
+<dd>
+ The counter of the number of times the task has been started
+</dd>
+<dt>
+<code>completed_count: u64</code>
+</dt>
+<dd>
+ The counter of the number of times the task has been completed
+</dd>
+<dt>
+<code>completed_supply: <a href="_Option">option::Option</a>&lt;u64&gt;</code>
+</dt>
+<dd>
+ The maximum number of times the task can be completed
 </dd>
 <dt>
 <code>package_id: <a href="_ID">object::ID</a></code>
@@ -175,6 +199,15 @@ The task is represented by a function that needs to be executed.
 
 
 
+<a name="0x0_task_store_ETaskCompletedSupplyReached"></a>
+
+
+
+<pre><code><b>const</b> <a href="task_store.md#0x0_task_store_ETaskCompletedSupplyReached">ETaskCompletedSupplyReached</a>: u64 = 1;
+</code></pre>
+
+
+
 <a name="0x0_task_store_MAX_TASKS"></a>
 
 
@@ -224,7 +257,7 @@ The arguments are the arguments that need to be passed to the function.
 
 
 
-<pre><code><b>public</b>(<b>friend</b>) <b>fun</b> <a href="task_store.md#0x0_task_store_add_task">add_task</a>(store: &<b>mut</b> <a href="_VecMap">vec_map::VecMap</a>&lt;<a href="_ID">object::ID</a>, <a href="task_store.md#0x0_task_store_Task">task_store::Task</a>&gt;, lvl: u64, name: <a href="">vector</a>&lt;u8&gt;, description: <a href="">vector</a>&lt;u8&gt;, reward_exp: u64, package_id: <a href="_ID">object::ID</a>, module_name: <a href="">vector</a>&lt;u8&gt;, function_name: <a href="">vector</a>&lt;u8&gt;, arguments: <a href="">vector</a>&lt;<a href="">vector</a>&lt;u8&gt;&gt;, ctx: &<b>mut</b> <a href="_TxContext">tx_context::TxContext</a>)
+<pre><code><b>public</b>(<b>friend</b>) <b>fun</b> <a href="task_store.md#0x0_task_store_add_task">add_task</a>(store: &<b>mut</b> <a href="_VecMap">vec_map::VecMap</a>&lt;<a href="_ID">object::ID</a>, <a href="task_store.md#0x0_task_store_Task">task_store::Task</a>&gt;, lvl: u64, name: <a href="">vector</a>&lt;u8&gt;, description: <a href="">vector</a>&lt;u8&gt;, reward_exp: u64, completed_supply: <a href="_Option">option::Option</a>&lt;u64&gt;, package_id: <a href="_ID">object::ID</a>, module_name: <a href="">vector</a>&lt;u8&gt;, function_name: <a href="">vector</a>&lt;u8&gt;, arguments: <a href="">vector</a>&lt;<a href="">vector</a>&lt;u8&gt;&gt;, ctx: &<b>mut</b> <a href="_TxContext">tx_context::TxContext</a>)
 </code></pre>
 
 
@@ -239,6 +272,7 @@ The arguments are the arguments that need to be passed to the function.
     name: <a href="">vector</a>&lt;u8&gt;,
     description: <a href="">vector</a>&lt;u8&gt;,
     reward_exp: u64,
+    completed_supply: Option&lt;u64&gt;,
     package_id: ID,
     module_name: <a href="">vector</a>&lt;u8&gt;,
     function_name: <a href="">vector</a>&lt;u8&gt;,
@@ -253,10 +287,13 @@ The arguments are the arguments that need to be passed to the function.
 
     <b>let</b> task = <a href="task_store.md#0x0_task_store_Task">Task</a> {
         id,
-        lvl,
         name: <a href="_utf8">string::utf8</a>(name),
         description: <a href="_utf8">string::utf8</a>(description),
+        lvl: <b>if</b> (lvl == 0)  <a href="_none">option::none</a>&lt;u64&gt;() <b>else</b> <a href="_some">option::some</a>(lvl),
         reward_exp,
+        completed_supply,
+        started_count: 0,
+        completed_count: 0,
         package_id,
         module_name: <a href="_utf8">string::utf8</a>(module_name),
         function_name: <a href="_utf8">string::utf8</a>(function_name),
@@ -285,7 +322,7 @@ Removes a task from the store.
 
 
 
-<pre><code><b>public</b>(<b>friend</b>) <b>fun</b> <a href="task_store.md#0x0_task_store_remove_task">remove_task</a>(store: &<b>mut</b> <a href="_VecMap">vec_map::VecMap</a>&lt;<a href="_ID">object::ID</a>, <a href="task_store.md#0x0_task_store_Task">task_store::Task</a>&gt;, task_id: <a href="_ID">object::ID</a>)
+<pre><code><b>public</b>(<b>friend</b>) <b>fun</b> <a href="task_store.md#0x0_task_store_remove_task">remove_task</a>(store: &<b>mut</b> <a href="_VecMap">vec_map::VecMap</a>&lt;<a href="_ID">object::ID</a>, <a href="task_store.md#0x0_task_store_Task">task_store::Task</a>&gt;, task_id: &<a href="_ID">object::ID</a>)
 </code></pre>
 
 
@@ -294,8 +331,93 @@ Removes a task from the store.
 <summary>Implementation</summary>
 
 
-<pre><code><b>public</b>(<b>friend</b>) <b>fun</b> <a href="task_store.md#0x0_task_store_remove_task">remove_task</a>(store: &<b>mut</b> VecMap&lt;ID, <a href="task_store.md#0x0_task_store_Task">Task</a>&gt;, task_id: ID) {
-    <a href="_remove">vec_map::remove</a>(store, &task_id);
+<pre><code><b>public</b>(<b>friend</b>) <b>fun</b> <a href="task_store.md#0x0_task_store_remove_task">remove_task</a>(store: &<b>mut</b> VecMap&lt;ID, <a href="task_store.md#0x0_task_store_Task">Task</a>&gt;, task_id: &ID) {
+    <a href="_remove">vec_map::remove</a>(store, task_id);
+}
+</code></pre>
+
+
+
+</details>
+
+<a name="0x0_task_store_increment_task_started_count"></a>
+
+## Function `increment_task_started_count`
+
+
+
+<pre><code><b>public</b>(<b>friend</b>) <b>fun</b> <a href="task_store.md#0x0_task_store_increment_task_started_count">increment_task_started_count</a>(store: &<b>mut</b> <a href="_VecMap">vec_map::VecMap</a>&lt;<a href="_ID">object::ID</a>, <a href="task_store.md#0x0_task_store_Task">task_store::Task</a>&gt;, task_id: &<a href="_ID">object::ID</a>)
+</code></pre>
+
+
+
+<details>
+<summary>Implementation</summary>
+
+
+<pre><code><b>public</b>(<b>friend</b>) <b>fun</b> <a href="task_store.md#0x0_task_store_increment_task_started_count">increment_task_started_count</a>(store: &<b>mut</b> VecMap&lt;ID, <a href="task_store.md#0x0_task_store_Task">Task</a>&gt;, task_id: &ID) {
+    <b>let</b> task = <a href="task_store.md#0x0_task_store_get_mut_task">get_mut_task</a>(store, task_id);
+    task.started_count = task.started_count + 1;
+}
+</code></pre>
+
+
+
+</details>
+
+<a name="0x0_task_store_increment_task_completed_count"></a>
+
+## Function `increment_task_completed_count`
+
+
+Increments the number of times the task has been completed.
+
+
+
+<pre><code><b>public</b>(<b>friend</b>) <b>fun</b> <a href="task_store.md#0x0_task_store_increment_task_completed_count">increment_task_completed_count</a>(store: &<b>mut</b> <a href="_VecMap">vec_map::VecMap</a>&lt;<a href="_ID">object::ID</a>, <a href="task_store.md#0x0_task_store_Task">task_store::Task</a>&gt;, task_id: &<a href="_ID">object::ID</a>)
+</code></pre>
+
+
+
+<details>
+<summary>Implementation</summary>
+
+
+<pre><code><b>public</b>(<b>friend</b>) <b>fun</b> <a href="task_store.md#0x0_task_store_increment_task_completed_count">increment_task_completed_count</a>(store: &<b>mut</b> VecMap&lt;ID, <a href="task_store.md#0x0_task_store_Task">Task</a>&gt;, task_id: &ID) {
+    <b>let</b> task = <a href="task_store.md#0x0_task_store_get_mut_task">get_mut_task</a>(store, task_id);
+    <b>let</b> new_count = task.completed_count + 1;
+    <b>assert</b>!(
+        <a href="_is_none">option::is_none</a>(&task.completed_supply) || new_count &lt;= *<a href="_borrow">option::borrow</a>(&task.completed_supply),
+        <a href="task_store.md#0x0_task_store_ETaskCompletedSupplyReached">ETaskCompletedSupplyReached</a>
+    );
+    task.completed_count = new_count;
+}
+</code></pre>
+
+
+
+</details>
+
+<a name="0x0_task_store_get_task"></a>
+
+## Function `get_task`
+
+
+Returns the task for the given task ID.
+
+
+
+<pre><code><b>public</b> <b>fun</b> <a href="task_store.md#0x0_task_store_get_task">get_task</a>(store: &<a href="_VecMap">vec_map::VecMap</a>&lt;<a href="_ID">object::ID</a>, <a href="task_store.md#0x0_task_store_Task">task_store::Task</a>&gt;, task_id: &<a href="_ID">object::ID</a>): &<a href="task_store.md#0x0_task_store_Task">task_store::Task</a>
+</code></pre>
+
+
+
+<details>
+<summary>Implementation</summary>
+
+
+<pre><code><b>public</b> <b>fun</b> <a href="task_store.md#0x0_task_store_get_task">get_task</a>(store: &VecMap&lt;ID, <a href="task_store.md#0x0_task_store_Task">Task</a>&gt;, task_id: &ID): &<a href="task_store.md#0x0_task_store_Task">Task</a> {
+    <a href="_get">vec_map::get</a>(store, task_id)
 }
 </code></pre>
 
@@ -322,7 +444,9 @@ Returns the task ID for the given task name.
 
 
 <pre><code><b>public</b> <b>fun</b> <a href="task_store.md#0x0_task_store_get_task_lvl">get_task_lvl</a>(store: &VecMap&lt;ID, <a href="task_store.md#0x0_task_store_Task">Task</a>&gt;, task_id: &ID): u64 {
-    <a href="_get">vec_map::get</a>(store, task_id).lvl
+    <b>let</b> task = <a href="_get">vec_map::get</a>(store, task_id);
+    <b>if</b> (<a href="_is_some">option::is_some</a>(&task.lvl)) *<a href="_borrow">option::borrow</a>(&task.lvl)
+    <b>else</b> 0
 }
 </code></pre>
 
@@ -349,7 +473,34 @@ Returns the task reward amount for the given task ID.
 
 
 <pre><code><b>public</b> <b>fun</b> <a href="task_store.md#0x0_task_store_get_task_reward">get_task_reward</a>(store: &VecMap&lt;ID, <a href="task_store.md#0x0_task_store_Task">Task</a>&gt;, task_id: &ID): u64 {
-    <a href="_get">vec_map::get</a>(store, task_id).reward_exp
+    <a href="task_store.md#0x0_task_store_get_task">get_task</a>(store, task_id).reward_exp
+}
+</code></pre>
+
+
+
+</details>
+
+<a name="0x0_task_store_get_mut_task"></a>
+
+## Function `get_mut_task`
+
+
+Returns the mutable task for the given task ID.
+
+
+
+<pre><code><b>public</b> <b>fun</b> <a href="task_store.md#0x0_task_store_get_mut_task">get_mut_task</a>(store: &<b>mut</b> <a href="_VecMap">vec_map::VecMap</a>&lt;<a href="_ID">object::ID</a>, <a href="task_store.md#0x0_task_store_Task">task_store::Task</a>&gt;, task_id: &<a href="_ID">object::ID</a>): &<b>mut</b> <a href="task_store.md#0x0_task_store_Task">task_store::Task</a>
+</code></pre>
+
+
+
+<details>
+<summary>Implementation</summary>
+
+
+<pre><code><b>public</b> <b>fun</b> <a href="task_store.md#0x0_task_store_get_mut_task">get_mut_task</a>(store: &<b>mut</b> VecMap&lt;ID, <a href="task_store.md#0x0_task_store_Task">Task</a>&gt;, task_id: &ID): &<b>mut</b> <a href="task_store.md#0x0_task_store_Task">Task</a> {
+    <a href="_get_mut">vec_map::get_mut</a>(store, task_id)
 }
 </code></pre>
 

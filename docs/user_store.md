@@ -154,7 +154,7 @@ Add a new user to the store.
 
 
 
-<pre><code><b>public</b>(<b>friend</b>) <b>fun</b> <a href="user_store.md#0x0_user_store_add_user">add_user</a>(store: &<b>mut</b> <a href="_Table">table::Table</a>&lt;<b>address</b>, <a href="user_store.md#0x0_user_store_User">user_store::User</a>&gt;, token_id: <a href="_ID">object::ID</a>, ctx: &<b>mut</b> <a href="_TxContext">tx_context::TxContext</a>)
+<pre><code><b>public</b>(<b>friend</b>) <b>fun</b> <a href="user_store.md#0x0_user_store_add_user">add_user</a>(store: &<b>mut</b> <a href="_Table">table::Table</a>&lt;<b>address</b>, <a href="user_store.md#0x0_user_store_User">user_store::User</a>&gt;, token_id: &<a href="_ID">object::ID</a>, ctx: &<b>mut</b> <a href="_TxContext">tx_context::TxContext</a>)
 </code></pre>
 
 
@@ -165,12 +165,12 @@ Add a new user to the store.
 
 <pre><code><b>public</b>(<b>friend</b>) <b>fun</b> <a href="user_store.md#0x0_user_store_add_user">add_user</a>(
     store: &<b>mut</b> Table&lt;<b>address</b>, <a href="user_store.md#0x0_user_store_User">User</a>&gt;,
-    token_id: ID,
+    token_id: &ID,
     ctx: &<b>mut</b> TxContext
 ) {
     <b>let</b> owner = <a href="_sender">tx_context::sender</a>(ctx);
     <b>let</b> data = <a href="user_store.md#0x0_user_store_User">User</a> {
-        token_id,
+        token_id: *token_id,
         active_tasks: <a href="_empty">vec_set::empty</a>(),
         done_tasks: <a href="_empty">vec_set::empty</a>(),
         owner,
@@ -254,7 +254,7 @@ Start a task with the given ID for the user.
 
 
 
-<pre><code><b>public</b>(<b>friend</b>) <b>fun</b> <a href="user_store.md#0x0_user_store_start_task">start_task</a>(store: &<b>mut</b> <a href="_Table">table::Table</a>&lt;<b>address</b>, <a href="user_store.md#0x0_user_store_User">user_store::User</a>&gt;, task_id: <a href="_ID">object::ID</a>, owner: <b>address</b>)
+<pre><code><b>public</b>(<b>friend</b>) <b>fun</b> <a href="user_store.md#0x0_user_store_start_task">start_task</a>(store: &<b>mut</b> <a href="_Table">table::Table</a>&lt;<b>address</b>, <a href="user_store.md#0x0_user_store_User">user_store::User</a>&gt;, task_id: &<a href="_ID">object::ID</a>, owner: <b>address</b>)
 </code></pre>
 
 
@@ -263,10 +263,10 @@ Start a task with the given ID for the user.
 <summary>Implementation</summary>
 
 
-<pre><code><b>public</b>(<b>friend</b>) <b>fun</b> <a href="user_store.md#0x0_user_store_start_task">start_task</a>(store: &<b>mut</b> Table&lt;<b>address</b>, <a href="user_store.md#0x0_user_store_User">User</a>&gt;, task_id: ID, owner: <b>address</b>) {
+<pre><code><b>public</b>(<b>friend</b>) <b>fun</b> <a href="user_store.md#0x0_user_store_start_task">start_task</a>(store: &<b>mut</b> Table&lt;<b>address</b>, <a href="user_store.md#0x0_user_store_User">User</a>&gt;, task_id: &ID, owner: <b>address</b>) {
     <b>let</b> user_data = <a href="_borrow_mut">table::borrow_mut</a>&lt;<b>address</b>, <a href="user_store.md#0x0_user_store_User">User</a>&gt;(store, owner);
-    <b>assert</b>!(!<a href="_contains">vec_set::contains</a>(&user_data.done_tasks, &task_id), <a href="user_store.md#0x0_user_store_ETaskAlreadyDone">ETaskAlreadyDone</a>);
-    <a href="_insert">vec_set::insert</a>(&<b>mut</b> user_data.active_tasks, task_id)
+    <b>assert</b>!(!<a href="_contains">vec_set::contains</a>(&user_data.done_tasks, task_id), <a href="user_store.md#0x0_user_store_ETaskAlreadyDone">ETaskAlreadyDone</a>);
+    <a href="_insert">vec_set::insert</a>(&<b>mut</b> user_data.active_tasks, *task_id)
 }
 </code></pre>
 
@@ -283,7 +283,7 @@ Finish a task with the given ID for the user.
 
 
 
-<pre><code><b>public</b>(<b>friend</b>) <b>fun</b> <a href="user_store.md#0x0_user_store_finish_task">finish_task</a>(store: &<b>mut</b> <a href="_Table">table::Table</a>&lt;<b>address</b>, <a href="user_store.md#0x0_user_store_User">user_store::User</a>&gt;, task_id: <a href="_ID">object::ID</a>, owner: <b>address</b>, reward_xp: u64)
+<pre><code><b>public</b>(<b>friend</b>) <b>fun</b> <a href="user_store.md#0x0_user_store_finish_task">finish_task</a>(store: &<b>mut</b> <a href="_Table">table::Table</a>&lt;<b>address</b>, <a href="user_store.md#0x0_user_store_User">user_store::User</a>&gt;, task_id: &<a href="_ID">object::ID</a>, owner: <b>address</b>, reward_xp: u64)
 </code></pre>
 
 
@@ -294,17 +294,17 @@ Finish a task with the given ID for the user.
 
 <pre><code><b>public</b>(<b>friend</b>) <b>fun</b> <a href="user_store.md#0x0_user_store_finish_task">finish_task</a>(
     store: &<b>mut</b> Table&lt;<b>address</b>, <a href="user_store.md#0x0_user_store_User">User</a>&gt;,
-    task_id: ID,
+    task_id: &ID,
     owner: <b>address</b>,
     reward_xp: u64
 ) {
     <b>let</b> user_data = <a href="_borrow_mut">table::borrow_mut</a>&lt;<b>address</b>, <a href="user_store.md#0x0_user_store_User">User</a>&gt;(store, owner);
 
-    <b>assert</b>!(!<a href="_contains">vec_set::contains</a>(&user_data.done_tasks, &task_id), <a href="user_store.md#0x0_user_store_ETaskAlreadyDone">ETaskAlreadyDone</a>);
-    <b>assert</b>!(<a href="_contains">vec_set::contains</a>(&user_data.active_tasks, &task_id), <a href="user_store.md#0x0_user_store_ETaskNotStarted">ETaskNotStarted</a>);
+    <b>assert</b>!(!<a href="_contains">vec_set::contains</a>(&user_data.done_tasks, task_id), <a href="user_store.md#0x0_user_store_ETaskAlreadyDone">ETaskAlreadyDone</a>);
+    <b>assert</b>!(<a href="_contains">vec_set::contains</a>(&user_data.active_tasks, task_id), <a href="user_store.md#0x0_user_store_ETaskNotStarted">ETaskNotStarted</a>);
 
-    <a href="_remove">vec_set::remove</a>(&<b>mut</b> user_data.active_tasks, &task_id);
-    <a href="_insert">vec_set::insert</a>(&<b>mut</b> user_data.done_tasks, task_id);
+    <a href="_remove">vec_set::remove</a>(&<b>mut</b> user_data.active_tasks, task_id);
+    <a href="_insert">vec_set::insert</a>(&<b>mut</b> user_data.done_tasks, *task_id);
 
     <a href="user_store.md#0x0_user_store_update_user_xp">update_user_xp</a>(store, owner, reward_xp)
 }
