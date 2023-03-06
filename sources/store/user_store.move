@@ -53,12 +53,12 @@ module loyalty_gm::user_store {
     */
     public(friend) fun add_user(
         store: &mut Table<address, User>,
-        token_id: ID,
+        token_id: &ID,
         ctx: &mut TxContext
     ) {
         let owner = tx_context::sender(ctx);
         let data = User {
-            token_id,
+            token_id: *token_id,
             active_tasks: vec_set::empty(),
             done_tasks: vec_set::empty(),
             owner,
@@ -91,10 +91,10 @@ module loyalty_gm::user_store {
     /**
         Start a task with the given ID for the user.
     */
-    public(friend) fun start_task(store: &mut Table<address, User>, task_id: ID, owner: address) {
+    public(friend) fun start_task(store: &mut Table<address, User>, task_id: &ID, owner: address) {
         let user_data = table::borrow_mut<address, User>(store, owner);
-        assert!(!vec_set::contains(&user_data.done_tasks, &task_id), ETaskAlreadyDone);
-        vec_set::insert(&mut user_data.active_tasks, task_id)
+        assert!(!vec_set::contains(&user_data.done_tasks, task_id), ETaskAlreadyDone);
+        vec_set::insert(&mut user_data.active_tasks, *task_id)
     }
 
     /**
@@ -102,17 +102,17 @@ module loyalty_gm::user_store {
     */
     public(friend) fun finish_task(
         store: &mut Table<address, User>,
-        task_id: ID,
+        task_id: &ID,
         owner: address,
         reward_xp: u64
     ) {
         let user_data = table::borrow_mut<address, User>(store, owner);
 
-        assert!(!vec_set::contains(&user_data.done_tasks, &task_id), ETaskAlreadyDone);
-        assert!(vec_set::contains(&user_data.active_tasks, &task_id), ETaskNotStarted);
+        assert!(!vec_set::contains(&user_data.done_tasks, task_id), ETaskAlreadyDone);
+        assert!(vec_set::contains(&user_data.active_tasks, task_id), ETaskNotStarted);
 
-        vec_set::remove(&mut user_data.active_tasks, &task_id);
-        vec_set::insert(&mut user_data.done_tasks, task_id);
+        vec_set::remove(&mut user_data.active_tasks, task_id);
+        vec_set::insert(&mut user_data.done_tasks, *task_id);
 
         update_user_xp(store, owner, reward_xp)
     }

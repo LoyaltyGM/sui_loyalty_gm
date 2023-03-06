@@ -133,20 +133,20 @@ module loyalty_gm::task_store {
     /**
         Removes a task from the store.
     */
-    public(friend) fun remove_task(store: &mut VecMap<ID, Task>, task_id: ID) {
-        vec_map::remove(store, &task_id);
+    public(friend) fun remove_task(store: &mut VecMap<ID, Task>, task_id: &ID) {
+        vec_map::remove(store, task_id);
     }
 
-    public(friend) fun increment_task_started_count(store: &mut VecMap<ID, Task>, task_id: ID) {
-        let task = get_mut_task(store, &task_id);
+    public(friend) fun increment_task_started_count(store: &mut VecMap<ID, Task>, task_id: &ID) {
+        let task = get_mut_task(store, task_id);
         task.started_count = task.started_count + 1;
     }
 
     /**
         Increments the number of times the task has been completed.
     */
-    public(friend) fun increment_task_completed_count(store: &mut VecMap<ID, Task>, task_id: ID) {
-        let task = get_mut_task(store, &task_id);
+    public(friend) fun increment_task_completed_count(store: &mut VecMap<ID, Task>, task_id: &ID) {
+        let task = get_mut_task(store, task_id);
         let new_count = task.completed_count + 1;
         assert!(
             option::is_none(&task.completed_supply) || new_count <= *option::borrow(&task.completed_supply),

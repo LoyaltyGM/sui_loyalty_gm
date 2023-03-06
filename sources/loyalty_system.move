@@ -292,7 +292,7 @@ module loyalty_gm::loyalty_system {
     ) {
         check_admin(admin_cap, loyalty_system);
 
-        task_store::remove_task(&mut loyalty_system.tasks, task_id);
+        task_store::remove_task(&mut loyalty_system.tasks, &task_id);
     }
 
     // ======= Verifier functions =======
@@ -311,11 +311,11 @@ module loyalty_gm::loyalty_system {
         let user_store = get_mut_user_store(loyalty_system);
         user_store::finish_task(
             user_store,
-            task_id,
+            &task_id,
             user,
             reward_xp
         );
-        task_store::increment_task_completed_count(&mut loyalty_system.tasks, task_id);
+        task_store::increment_task_completed_count(&mut loyalty_system.tasks, &task_id);
     }
 
     // ======= Public functions =======
