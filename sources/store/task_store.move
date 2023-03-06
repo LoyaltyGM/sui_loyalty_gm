@@ -45,6 +45,8 @@ module loyalty_gm::task_store {
         lvl: Option<u64>,
         /// The amount of XP that the user will receive upon completing the task
         reward_exp: u64,
+        /// The counter of the number of times the task has been started
+        started_count: u64,
         /// The counter of the number of times the task has been completed
         completed_count: u64,
         /// The maximum number of times the task can be completed
@@ -112,6 +114,7 @@ module loyalty_gm::task_store {
             lvl: if (lvl == 0)  option::none<u64>() else option::some(lvl),
             reward_exp,
             completed_supply,
+            started_count: 0,
             completed_count: 0,
             package_id,
             module_name: string::utf8(module_name),
@@ -132,6 +135,11 @@ module loyalty_gm::task_store {
     */
     public(friend) fun remove_task(store: &mut VecMap<ID, Task>, task_id: ID) {
         vec_map::remove(store, &task_id);
+    }
+
+    public(friend) fun increment_task_started_count(store: &mut VecMap<ID, Task>, task_id: ID) {
+        let task = get_mut_task(store, &task_id);
+        task.started_count = task.started_count + 1;
     }
 
     /**

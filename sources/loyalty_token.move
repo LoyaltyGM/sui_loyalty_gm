@@ -157,6 +157,7 @@ module loyalty_gm::loyalty_token {
             token.lvl >= task_store::get_task_lvl(loyalty_system::get_tasks(loyalty_system), &task_id),
             EInvalidLvl
         );
+        task_store::increment_task_started_count(loyalty_system::get_mut_tasks(loyalty_system), task_id);
         user_store::start_task(loyalty_system::get_mut_user_store(loyalty_system), task_id, tx_context::sender(ctx))
     }
 

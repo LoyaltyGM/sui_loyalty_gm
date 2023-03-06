@@ -322,17 +322,30 @@ module loyalty_gm::loyalty_system {
 
     // ======= Public functions: Friends
 
+    /**
+        Get the mutable user store.
+    */
     public(friend) fun get_mut_user_store(loyalty_system: &mut LoyaltySystem): &mut Table<address, User> {
         dof::borrow_mut(&mut loyalty_system.id, USER_STORE_KEY)
     }
 
+    public(friend) fun get_mut_tasks(loyalty_system: &mut LoyaltySystem): &mut VecMap<ID, Task> {
+        &mut loyalty_system.tasks
+    }
+
+    /**
+        Get the mutable reward.
+    */
+    public(friend) fun get_mut_reward(loyalty_system: &mut LoyaltySystem, lvl: u64): &mut Reward {
+        vec_map::get_mut(&mut loyalty_system.rewards, &lvl)
+    }
+
+    /**
+        Increment the total minted count.
+    */
     public(friend) fun increment_total_minted(loyalty_system: &mut LoyaltySystem) {
         assert!(get_total_minted(loyalty_system) <= get_max_supply(loyalty_system), EMaxSupplyReached);
         loyalty_system.total_minted = loyalty_system.total_minted + 1;
-    }
-
-    public(friend) fun get_mut_reward(loyalty_system: &mut LoyaltySystem, lvl: u64): &mut Reward {
-        vec_map::get_mut(&mut loyalty_system.rewards, &lvl)
     }
 
     // ======= Public functions: View
