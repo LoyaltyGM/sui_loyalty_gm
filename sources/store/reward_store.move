@@ -28,7 +28,13 @@ module loyalty_gm::reward_store {
     const BASIC_REWARD_XP: u64 = 5;
     const REWARD_RECIPIENTS_KEY: vector<u8> = b"reward_recipients";
 
-    // ======== Constants =========
+    // Reward Types
+
+    const COIN_REWARD: u64 = 0;
+    const TOKEN_REWARD: u64 = 1;
+    const SOULBOND_REWARD: u64 = 2;
+
+    // ======== Errors =========
 
     const EInvalidSupply: u64 = 0;
     const ERewardPoolExceeded: u64 = 1;
@@ -42,6 +48,7 @@ module loyalty_gm::reward_store {
     */
     struct Reward has key, store {
         id: UID,
+        type: u64,
         level: u64,
         description: String,
         reward_pool: Balance<SUI>,
@@ -107,6 +114,7 @@ module loyalty_gm::reward_store {
 
         let reward = Reward {
             id: object::new(ctx),
+            type: COIN_REWARD,
             level,
             description: string::utf8(description),
             reward_pool: balance,
@@ -197,6 +205,7 @@ module loyalty_gm::reward_store {
     fun delete_reward(reward: Reward) {
         let Reward {
             id,
+            type: _,
             description: _,
             level: _,
             reward_pool,
