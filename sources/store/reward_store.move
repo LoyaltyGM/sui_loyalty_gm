@@ -160,15 +160,17 @@ module loyalty_gm::reward_store {
     ) {
         check_claimed(reward, ctx);
 
-        let pool_amt = balance::value(&reward.reward_pool);
-        assert!(pool_amt >= reward.reward_per_user, ERewardPoolExceeded);
+        if (reward.type == COIN_REWARD) {
+            let pool_amt = balance::value(&reward.reward_pool);
+            assert!(pool_amt >= reward.reward_per_user, ERewardPoolExceeded);
+
+            transfer::transfer(
+                coin::take(&mut reward.reward_pool, reward.reward_per_user, ctx),
+                tx_context::sender(ctx)
+            );
+        };
 
         set_reward_claimed(reward, ctx);
-
-        transfer::transfer(
-            coin::take(&mut reward.reward_pool, reward.reward_per_user, ctx),
-            tx_context::sender(ctx)
-        );
     }
 
     // ======== Private functions =========
