@@ -47,6 +47,12 @@ module loyalty_gm::reward_store {
         reward_pool: Balance<SUI>,
         reward_supply: u64,
         reward_per_user: u64,
+
+        /*
+           --dynamic fields--
+           /// Table of reward recipients.
+           reward_recipients: table<address, bool>
+       */
     }
 
     // ======== Events =========
