@@ -52,7 +52,7 @@ module loyalty_gm::reward_store {
            --dynamic fields--
            /// Table of reward recipients.
            reward_recipients: table<address, bool>
-       */
+        */
     }
 
     // ======== Events =========
