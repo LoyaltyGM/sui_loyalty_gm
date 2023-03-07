@@ -184,7 +184,7 @@ module loyalty_gm::test_utils {
             let coins = vector::empty();
             vector::push_back(&mut coins, coin1);
 
-            loyalty_system::add_reward(
+            loyalty_system::add_coin_reward(
                 &admin_cap,
                 &mut ls,
                 REWARD_LVL,
@@ -209,7 +209,7 @@ module loyalty_gm::test_utils {
             let coins = vector::empty();
             vector::push_back(&mut coins, coin1);
 
-            loyalty_system::add_reward(
+            loyalty_system::add_coin_reward(
                 &admin_cap,
                 &mut ls,
                 REWARD_LVL,
@@ -234,7 +234,7 @@ module loyalty_gm::test_utils {
             let coins = vector::empty();
             vector::push_back(&mut coins, coin1);
 
-            loyalty_system::add_reward(
+            loyalty_system::add_coin_reward(
                 &admin_cap,
                 &mut ls,
                 LS_MAX_LVL + 1,
@@ -259,7 +259,7 @@ module loyalty_gm::test_utils {
             let coins = vector::empty();
             vector::push_back(&mut coins, coin1);
 
-            loyalty_system::add_reward(
+            loyalty_system::add_coin_reward(
                 &admin_cap,
                 &mut ls,
                 REWARD_LVL,

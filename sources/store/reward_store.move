@@ -89,7 +89,7 @@ module loyalty_gm::reward_store {
         It creates a new Reward struct and adds it to the store.
         It also creates a new table for the current reward recipients.
     */
-    public(friend) fun add_reward(
+    public(friend) fun add_coin_reward(
         store: &mut VecMap<u64, Reward>,
         level: u64,
         description: vector<u8>,

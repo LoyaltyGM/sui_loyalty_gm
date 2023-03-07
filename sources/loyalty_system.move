@@ -206,7 +206,7 @@ module loyalty_gm::loyalty_system {
         Add a new reward to the loyalty system.
         Users can claim rewards by reaching a certain level.
     */
-    public entry fun add_reward(
+    public entry fun add_coin_reward(
         admin_cap: &AdminCap,
         loyalty_system: &mut LoyaltySystem,
         level: u64,
@@ -219,7 +219,7 @@ module loyalty_gm::loyalty_system {
         check_admin(admin_cap, loyalty_system);
         assert!(level <= loyalty_system.max_lvl, EInvalidLevel);
 
-        reward_store::add_reward(
+        reward_store::add_coin_reward(
             &mut loyalty_system.rewards,
             level,
             description,
