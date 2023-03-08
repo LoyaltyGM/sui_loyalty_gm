@@ -81,7 +81,7 @@ module loyalty_gm::reward_store {
         This struct represents a reward token sent to the user after completing a task.
         This token can be sent by the user to another user
     */
-    struct RewardToken has key, store {
+    struct TokenReward has key, store {
         id: UID,
         level: u64,
         loyalty_system: ID,
