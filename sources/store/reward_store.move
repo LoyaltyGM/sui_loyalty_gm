@@ -6,6 +6,7 @@
 module loyalty_gm::reward_store {
     use std::string::{Self, String};
     use std::vector;
+    use std::option::{Self, Option};
 
     use sui::balance::{Self, Balance};
     use sui::coin::{Self, Coin};
@@ -18,6 +19,7 @@ module loyalty_gm::reward_store {
     use sui::transfer;
     use sui::tx_context::{Self, TxContext};
     use sui::vec_map::{Self, VecMap};
+    use sui::url::{Self, Url};
 
     friend loyalty_gm::loyalty_system;
     friend loyalty_gm::loyalty_token;
@@ -30,15 +32,19 @@ module loyalty_gm::reward_store {
 
     // Reward Types
 
-    const COIN_REWARD: u64 = 0;
-    const TOKEN_REWARD: u64 = 1;
-    const SOULBOND_REWARD: u64 = 2;
+    const COIN_REWARD_TYPE: u64 = 0;
+    const TOKEN_REWARD_TYPE: u64 = 1;
+    const SOULBOND_REWARD_TYPE: u64 = 2;
+
+    const TOKEN_REWARD_NAME: vector<u8> = b"Token Reward";
+    const SOULBOND_REWARD_NAME: vector<u8> = b"Soulbond Reward";
 
     // ======== Errors =========
 
     const EInvalidSupply: u64 = 0;
     const ERewardPoolExceeded: u64 = 1;
     const EAlreadyClaimed: u64 = 2;
+    const EInvalidRewardType: u64 = 3;
 
     // ======== Structs =========
 
@@ -51,15 +57,54 @@ module loyalty_gm::reward_store {
         type: u64,
         level: u64,
         description: String,
-        reward_pool: Balance<SUI>,
         reward_supply: u64,
-        reward_per_user: u64,
+
+        // Coin Reward fields
+        /// Balance can not be used as a Option<Balance<SUI>>, so we use a balance with value 0 as a None
+        reward_pool: Balance<SUI>,
+        /// Reward per user is an Option, so we can use it as a None if the reward is a NFT
+        reward_per_user: Option<u64>,
+
+        // NFT Reward fields
+        url: Option<Url>,
+        reward_count: Option<u64>
 
         /*
            --dynamic fields--
            /// Table of reward recipients.
            reward_recipients: table<address, bool>
         */
+    }
+
+    /**
+        Reward Token struct.
+        This struct represents a reward token sent to the user after completing a task.
+        This token can be sent by the user to another user
+    */
+    struct RewardToken has key, store {
+        id: UID,
+        level: u64,
+        loyalty_system: ID,
+        reward_id: ID,
+        name: String,
+        description: String,
+        claimer: address,
+        url: Url,
+    }
+
+    /**
+        Soulbond Reward struct.
+        This struct represents a reward token sent to the user after completing a task.
+        This token can NOT be sent by the user to another user
+    */
+    struct SoulbondReward has key {
+        id: UID,
+        level: u64,
+        loyalty_system: ID,
+        reward_id: ID,
+        name: String,
+        description: String,
+        url: Url,
     }
 
     // ======== Events =========
@@ -69,6 +114,8 @@ module loyalty_gm::reward_store {
         reward_id: ID,
         /// Lvl of the Reward
         lvl: u64,
+        /// Type of the Reward
+        type: u64,
         /// Description of the Reward
         description: string::String,
     }
@@ -114,22 +161,58 @@ module loyalty_gm::reward_store {
 
         let reward = Reward {
             id: object::new(ctx),
-            type: COIN_REWARD,
+            type: COIN_REWARD_TYPE,
             level,
             description: string::utf8(description),
             reward_pool: balance,
             reward_supply,
-            reward_per_user: balance_val / reward_supply,
+            reward_per_user: option::some(balance_val / reward_supply),
+            url: option::none(),
+            reward_count: option::none(),
         };
 
-        emit(CreateRewardEvent {
-            reward_id: object::id(&reward),
-            lvl: reward.level,
-            description: reward.description,
-        });
+        emit_create_reward_event(&reward);
 
         dof::add(&mut reward.id, REWARD_RECIPIENTS_KEY, table::new<address, bool>(ctx));
         vec_map::insert(store, level, reward);
+    }
+
+    public(friend) fun add_token_reward(
+        store: &mut VecMap<u64, Reward>,
+        level: u64,
+        url: vector<u8>,
+        description: vector<u8>,
+        reward_supply: u64,
+        ctx: &mut TxContext
+    ) {
+        add_nft_reward(
+            store,
+            TOKEN_REWARD_TYPE,
+            level,
+            url,
+            description,
+            reward_supply,
+            ctx
+        );
+    }
+
+    public(friend) fun add_soulbond_reward(
+        store: &mut VecMap<u64, Reward>,
+        level: u64,
+        url: vector<u8>,
+        description: vector<u8>,
+        reward_supply: u64,
+        ctx: &mut TxContext
+    ) {
+        add_nft_reward(
+            store,
+            SOULBOND_REWARD_TYPE,
+            level,
+            url,
+            description,
+            reward_supply,
+            ctx
+        );
     }
 
     /**
@@ -160,12 +243,13 @@ module loyalty_gm::reward_store {
     ) {
         check_claimed(reward, ctx);
 
-        if (reward.type == COIN_REWARD) {
+        if (reward.type == COIN_REWARD_TYPE && option::is_some(&reward.reward_per_user)) {
             let pool_amt = balance::value(&reward.reward_pool);
-            assert!(pool_amt >= reward.reward_per_user, ERewardPoolExceeded);
+            let reward_per_user = option::borrow(&reward.reward_per_user);
+            assert!(pool_amt >= *reward_per_user, ERewardPoolExceeded);
 
             transfer::transfer(
-                coin::take(&mut reward.reward_pool, reward.reward_per_user, ctx),
+                coin::take(&mut reward.reward_pool, *reward_per_user, ctx),
                 tx_context::sender(ctx)
             );
         };
@@ -174,6 +258,44 @@ module loyalty_gm::reward_store {
     }
 
     // ======== Private functions =========
+
+    fun add_nft_reward(
+        store: &mut VecMap<u64, Reward>,
+        type: u64,
+        level: u64,
+        url: vector<u8>,
+        description: vector<u8>,
+        reward_supply: u64,
+        ctx: &mut TxContext
+    ) {
+        assert!(type == TOKEN_REWARD_TYPE || type == SOULBOND_REWARD_TYPE, EInvalidRewardType);
+
+        let reward = Reward {
+            id: object::new(ctx),
+            type,
+            level,
+            description: string::utf8(description),
+            reward_pool: balance::zero(),
+            reward_supply,
+            reward_per_user: option::none(),
+            url: option::some(url::new_unsafe_from_bytes(url)),
+            reward_count: option::some(0),
+        };
+
+        emit_create_reward_event(&reward);
+
+        dof::add(&mut reward.id, REWARD_RECIPIENTS_KEY, table::new<address, bool>(ctx));
+        vec_map::insert(store, level, reward);
+    }
+
+    fun emit_create_reward_event(reward: &Reward) {
+        emit(CreateRewardEvent {
+            reward_id: object::id(reward),
+            type: reward.type,
+            lvl: reward.level,
+            description: reward.description,
+        });
+    }
 
     /**
         Sets the reward as claimed by the sender.
@@ -213,6 +335,8 @@ module loyalty_gm::reward_store {
             reward_pool,
             reward_supply: _,
             reward_per_user: _,
+            url: _,
+            reward_count: _,
         } = reward;
         balance::destroy_zero(reward_pool);
         object::delete(id);
