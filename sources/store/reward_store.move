@@ -33,10 +33,10 @@ module loyalty_gm::reward_store {
     // Reward Types
 
     const COIN_REWARD_TYPE: u64 = 0;
-    const TOKEN_REWARD_TYPE: u64 = 1;
+    const NFT_REWARD_TYPE: u64 = 1;
     const SOULBOND_REWARD_TYPE: u64 = 2;
 
-    const TOKEN_REWARD_NAME: vector<u8> = b"Token Reward";
+    const NFT_REWARD_NAME: vector<u8> = b"NFT Reward";
     const SOULBOND_REWARD_NAME: vector<u8> = b"Soulbond Reward";
 
     // ======== Errors =========
@@ -81,7 +81,7 @@ module loyalty_gm::reward_store {
         This struct represents a reward token sent to the user after completing a task.
         This token can be sent by the user to another user
     */
-    struct TokenReward has key, store {
+    struct NftReward has key, store {
         id: UID,
         level: u64,
         loyalty_system: ID,
@@ -177,7 +177,7 @@ module loyalty_gm::reward_store {
         vec_map::insert(store, level, reward);
     }
 
-    public(friend) fun add_token_reward(
+    public(friend) fun add_nft_reward(
         store: &mut VecMap<u64, Reward>,
         level: u64,
         url: vector<u8>,
@@ -185,9 +185,9 @@ module loyalty_gm::reward_store {
         reward_supply: u64,
         ctx: &mut TxContext
     ) {
-        add_nft_reward(
+        add_transferable_reward(
             store,
-            TOKEN_REWARD_TYPE,
+            NFT_REWARD_TYPE,
             level,
             url,
             description,
@@ -204,7 +204,7 @@ module loyalty_gm::reward_store {
         reward_supply: u64,
         ctx: &mut TxContext
     ) {
-        add_nft_reward(
+        add_transferable_reward(
             store,
             SOULBOND_REWARD_TYPE,
             level,
@@ -259,7 +259,7 @@ module loyalty_gm::reward_store {
 
     // ======== Private functions =========
 
-    fun add_nft_reward(
+    fun add_transferable_reward(
         store: &mut VecMap<u64, Reward>,
         type: u64,
         level: u64,
@@ -268,7 +268,7 @@ module loyalty_gm::reward_store {
         reward_supply: u64,
         ctx: &mut TxContext
     ) {
-        assert!(type == TOKEN_REWARD_TYPE || type == SOULBOND_REWARD_TYPE, EInvalidRewardType);
+        assert!(type == NFT_REWARD_TYPE || type == SOULBOND_REWARD_TYPE, EInvalidRewardType);
 
         let reward = Reward {
             id: object::new(ctx),
