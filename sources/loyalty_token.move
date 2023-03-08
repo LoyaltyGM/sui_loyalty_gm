@@ -45,7 +45,7 @@ module loyalty_gm::loyalty_token {
         description: String,
         url: Url,
         /// Current level of the token.
-        lvl: u64,
+        level: u64,
         /// Current XP of the token.
         xp: u64,
         /// XP needed to reach the next level.
@@ -86,7 +86,7 @@ module loyalty_gm::loyalty_token {
             name: *loyalty_system::get_name(ls),
             description: *loyalty_system::get_description(ls),
             url: *loyalty_system::get_url(ls),
-            lvl: INITIAL_LVL,
+            level: INITIAL_LVL,
             xp: INITIAL_XP,
             xp_to_next_lvl: get_xp_to_next_lvl(INITIAL_LVL, INITIAL_XP),
         };
@@ -138,7 +138,7 @@ module loyalty_gm::loyalty_token {
         reward_lvl: u64,
         ctx: &mut TxContext
     ) {
-        assert!(token.lvl >= reward_lvl, EInvalidLvl);
+        assert!(token.level >= reward_lvl, EInvalidLvl);
         reward_store::claim_reward(loyalty_system::get_mut_reward(ls, reward_lvl), ctx);
     }
 
@@ -154,7 +154,7 @@ module loyalty_gm::loyalty_token {
         ctx: &mut TxContext
     ) {
         assert!(
-            token.lvl >= task_store::get_task_lvl(loyalty_system::get_tasks(loyalty_system), &task_id),
+            token.level >= task_store::get_task_lvl(loyalty_system::get_tasks(loyalty_system), &task_id),
             EInvalidLvl
         );
         task_store::increment_task_started_count(loyalty_system::get_mut_tasks(loyalty_system), &task_id);
@@ -178,7 +178,7 @@ module loyalty_gm::loyalty_token {
         token.xp_to_next_lvl = get_xp_to_next_lvl(new_lvl, new_xp);
 
         let max_lvl = loyalty_system::get_max_lvl(ls);
-        token.lvl = if (new_lvl <= max_lvl) new_lvl else max_lvl;
+        token.level = if (new_lvl <= max_lvl) new_lvl else max_lvl;
     }
 
     /**
@@ -209,6 +209,6 @@ module loyalty_gm::loyalty_token {
 
     #[test_only]
     public fun get_lvl(token: &LoyaltyToken): u64 {
-        token.lvl
+        token.level
     }
 }
