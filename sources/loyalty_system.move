@@ -230,6 +230,50 @@ module loyalty_gm::loyalty_system {
         );
     }
 
+    public entry fun add_nft_reward(
+        admin_cap: &AdminCap,
+        loyalty_system: &mut LoyaltySystem,
+        level: u64,
+        url: vector<u8>,
+        description: vector<u8>,
+        reward_supply: u64,
+        ctx: &mut TxContext
+    ) {
+        check_admin(admin_cap, loyalty_system);
+        assert!(level <= loyalty_system.max_lvl, EInvalidLevel);
+
+        reward_store::add_nft_reward(
+            &mut loyalty_system.rewards,
+            level,
+            url,
+            description,
+            reward_supply,
+            ctx
+        );
+    }
+
+    public entry fun add_soulbond_reward(
+        admin_cap: &AdminCap,
+        loyalty_system: &mut LoyaltySystem,
+        level: u64,
+        url: vector<u8>,
+        description: vector<u8>,
+        reward_supply: u64,
+        ctx: &mut TxContext
+    ) {
+        check_admin(admin_cap, loyalty_system);
+        assert!(level <= loyalty_system.max_lvl, EInvalidLevel);
+
+        reward_store::add_soulbond_reward(
+            &mut loyalty_system.rewards,
+            level,
+            url,
+            description,
+            reward_supply,
+            ctx
+        );
+    }
+
     /**
         Remove a reward from the loyalty system.
     */
