@@ -18,8 +18,8 @@ module loyalty_gm::user_store {
 
     // ======== Errors =========
 
-    const ETaskAlreadyDone: u64 = 0;
-    const ETaskNotStarted: u64 = 1;
+    const EQuestAlreadyDone: u64 = 0;
+    const EQuestNotStarted: u64 = 1;
 
     // ======== Structs =========
 
@@ -30,10 +30,10 @@ module loyalty_gm::user_store {
         token_id: ID,
         /// Address of the user that data belongs to.
         owner: address,
-        /// Tasks that are currently active.
-        active_tasks: VecSet<ID>,
-        /// Tasks that are already done.
-        done_tasks: VecSet<ID>,
+        /// Quests that are currently active.
+        active_quests: VecSet<ID>,
+        /// Quests that are already done.
+        done_quests: VecSet<ID>,
         /// XP that can be claimed by the user. It is reset to INITIAL_XP after claiming.
         claimable_xp: u64,
     }
@@ -59,8 +59,8 @@ module loyalty_gm::user_store {
         let owner = tx_context::sender(ctx);
         let data = User {
             token_id: *token_id,
-            active_tasks: vec_set::empty(),
-            done_tasks: vec_set::empty(),
+            active_quests: vec_set::empty(),
+            done_quests: vec_set::empty(),
             owner,
             claimable_xp: INITIAL_XP,
         };
@@ -89,30 +89,30 @@ module loyalty_gm::user_store {
     }
 
     /**
-        Start a task with the given ID for the user.
+        Start a quest with the given ID for the user.
     */
-    public(friend) fun start_task(store: &mut Table<address, User>, task_id: &ID, owner: address) {
+    public(friend) fun start_quest(store: &mut Table<address, User>, quest_id: &ID, owner: address) {
         let user_data = table::borrow_mut<address, User>(store, owner);
-        assert!(!vec_set::contains(&user_data.done_tasks, task_id), ETaskAlreadyDone);
-        vec_set::insert(&mut user_data.active_tasks, *task_id)
+        assert!(!vec_set::contains(&user_data.done_quests, quest_id), EQuestAlreadyDone);
+        vec_set::insert(&mut user_data.active_quests, *quest_id)
     }
 
     /**
-        Finish a task with the given ID for the user.
+        Finish a quest with the given ID for the user.
     */
-    public(friend) fun finish_task(
+    public(friend) fun finish_quest(
         store: &mut Table<address, User>,
-        task_id: &ID,
+        quest_id: &ID,
         owner: address,
         reward_xp: u64
     ) {
         let user_data = table::borrow_mut<address, User>(store, owner);
 
-        assert!(!vec_set::contains(&user_data.done_tasks, task_id), ETaskAlreadyDone);
-        assert!(vec_set::contains(&user_data.active_tasks, task_id), ETaskNotStarted);
+        assert!(!vec_set::contains(&user_data.done_quests, quest_id), EQuestAlreadyDone);
+        assert!(vec_set::contains(&user_data.active_quests, quest_id), EQuestNotStarted);
 
-        vec_set::remove(&mut user_data.active_tasks, task_id);
-        vec_set::insert(&mut user_data.done_tasks, *task_id);
+        vec_set::remove(&mut user_data.active_quests, quest_id);
+        vec_set::insert(&mut user_data.done_quests, *quest_id);
 
         update_user_xp(store, owner, reward_xp)
     }

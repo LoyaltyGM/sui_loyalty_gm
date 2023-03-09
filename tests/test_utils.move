@@ -25,8 +25,8 @@ module loyalty_gm::test_utils {
     const LS_MAX_SUPPLY: u64 = 100;
     const LS_MAX_LVL: u64 = 10;
 
-    //task
-    const TASK_REWARD: u64 = 100;
+    //quest
+    const QUEST_REWARD: u64 = 100;
 
     //reward
     const REWARD_LVL: u64 = 1;
@@ -73,8 +73,8 @@ module loyalty_gm::test_utils {
         LS_MAX_LVL
     }
 
-    public fun get_TASK_REWARD(): u64 {
-        TASK_REWARD
+    public fun get_QUEST_REWARD(): u64 {
+        QUEST_REWARD
     }
 
     public fun get_REWARD_LVL(): u64 {
@@ -122,9 +122,9 @@ module loyalty_gm::test_utils {
         };
     }
 
-    // ======== Utility functions: Tasks
+    // ======== Utility functions: Quests
 
-    public fun add_task(scenario: &mut Scenario, task_lvl: u64, completed_supply: u64) {
+    public fun add_quest(scenario: &mut Scenario, quest_lvl: u64, completed_supply: u64) {
         test_scenario::next_tx(scenario, ADMIN);
         {
             let ls = test_scenario::take_shared<LoyaltySystem>(scenario);
@@ -134,13 +134,13 @@ module loyalty_gm::test_utils {
             vector::push_back(&mut args, b"arg1");
             vector::push_back(&mut args, b"arg2");
 
-            loyalty_system::add_task(
+            loyalty_system::add_quest(
                 &admin_cap,
                 &mut ls,
-                task_lvl,
+                quest_lvl,
                 b"name",
                 b"description",
-                TASK_REWARD,
+                QUEST_REWARD,
                 completed_supply,
                 object::id(&admin_cap),
                 b"module",
@@ -154,16 +154,16 @@ module loyalty_gm::test_utils {
         };
     }
 
-    public fun remove_task(scenario: &mut Scenario, task_id: object::ID) {
+    public fun remove_quest(scenario: &mut Scenario, quest_id: object::ID) {
         test_scenario::next_tx(scenario, ADMIN);
         {
             let ls = test_scenario::take_shared<LoyaltySystem>(scenario);
             let admin_cap = test_scenario::take_from_sender<AdminCap>(scenario);
 
-            loyalty_system::remove_task(
+            loyalty_system::remove_quest(
                 &admin_cap,
                 &mut ls,
-                task_id,
+                quest_id,
                 test_scenario::ctx(scenario)
             );
 
@@ -324,16 +324,16 @@ module loyalty_gm::test_utils {
         };
     }
 
-    public fun finish_task(scenario: &mut Scenario, user: address, task_id: object::ID) {
+    public fun finish_quest(scenario: &mut Scenario, user: address, quest_id: object::ID) {
         test_scenario::next_tx(scenario, VERIFIER);
         {
             let ls = test_scenario::take_shared<LoyaltySystem>(scenario);
             let verify_cap = test_scenario::take_from_sender<VerifierCap>(scenario);
 
-            loyalty_system::finish_task(
+            loyalty_system::finish_quest(
                 &verify_cap,
                 &mut ls,
-                task_id,
+                quest_id,
                 user
             );
 
@@ -371,17 +371,17 @@ module loyalty_gm::test_utils {
         };
     }
 
-    public fun start_task(scenario: &mut Scenario, user: address, task_id: object::ID) {
+    public fun start_quest(scenario: &mut Scenario, user: address, quest_id: object::ID) {
         test_scenario::next_tx(scenario, user);
         {
             let ls = test_scenario::take_shared<LoyaltySystem>(scenario);
             let token = test_scenario::take_from_sender<LoyaltyToken>(scenario);
 
 
-            loyalty_token::start_task(
+            loyalty_token::start_quest(
                 &mut ls,
                 &mut token,
-                task_id,
+                quest_id,
                 test_scenario::ctx(scenario)
             );
 

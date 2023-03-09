@@ -8,8 +8,8 @@ module loyalty_gm::token_tests {
 
     use loyalty_gm::loyalty_system::{Self, LoyaltySystem};
     use loyalty_gm::loyalty_token::{Self, LoyaltyToken};
-    use loyalty_gm::system_tests::{init_add_task, init_create_loyalty_system, init_finish_task};
-    use loyalty_gm::test_utils::{Self, get_USER_1, get_TASK_REWARD, get_REWARD_LVL, get_REWARD_POOL_AMT, get_REWARD_SUPPLY, get_USER_2};
+    use loyalty_gm::system_tests::{init_add_quest, init_create_loyalty_system, init_finish_quest};
+    use loyalty_gm::test_utils::{Self, get_USER_1, get_QUEST_REWARD, get_REWARD_LVL, get_REWARD_POOL_AMT, get_REWARD_SUPPLY, get_USER_2};
     use loyalty_gm::user_store;
 
     // ======== Errors =========
@@ -59,15 +59,15 @@ module loyalty_gm::token_tests {
         test_scenario::end(scenario_val);
     }
 
-    // ======== Tasks
+    // ======== Quests
 
     #[test]
-    public fun start_task() {
-        let (scenario_val, task_id) = init_add_task(0, 0);
+    public fun start_quest() {
+        let (scenario_val, quest_id) = init_add_quest(0, 0);
         let scenario = &mut scenario_val;
 
         test_utils::mint_token(scenario, get_USER_1());
-        test_utils::start_task(scenario, get_USER_1(), task_id);
+        test_utils::start_quest(scenario, get_USER_1(), quest_id);
 
         test_scenario::next_tx(scenario, get_USER_1());
         {
@@ -82,12 +82,12 @@ module loyalty_gm::token_tests {
 
     #[test]
     #[expected_failure(abort_code = loyalty_gm::loyalty_token::EInvalidLvl)]
-    public fun start_task_invalid_lvl() {
-        let (scenario_val, task_id) = init_add_task(1, 0);
+    public fun start_quest_invalid_lvl() {
+        let (scenario_val, quest_id) = init_add_quest(1, 0);
         let scenario = &mut scenario_val;
 
         test_utils::mint_token(scenario, get_USER_1());
-        test_utils::start_task(scenario, get_USER_1(), task_id);
+        test_utils::start_quest(scenario, get_USER_1(), quest_id);
 
         test_scenario::end(scenario_val);
     }
@@ -96,7 +96,7 @@ module loyalty_gm::token_tests {
 
     #[test]
     public fun claim_xp() {
-        let scenario_val = init_finish_task();
+        let scenario_val = init_finish_quest();
         let scenario = &mut scenario_val;
 
         test_utils::claim_xp(scenario, get_USER_1());
@@ -104,7 +104,7 @@ module loyalty_gm::token_tests {
         test_scenario::next_tx(scenario, get_USER_1());
         {
             let token = test_scenario::take_from_sender<LoyaltyToken>(scenario);
-            assert!(loyalty_token::get_xp(&token) == get_TASK_REWARD(), Error);
+            assert!(loyalty_token::get_xp(&token) == get_QUEST_REWARD(), Error);
             test_scenario::return_to_sender(scenario, token);
         };
 
@@ -136,7 +136,7 @@ module loyalty_gm::token_tests {
 
     #[test]
     fun claim_reward() {
-        let scenario_val = init_finish_task();
+        let scenario_val = init_finish_quest();
         let scenario = &mut scenario_val;
 
         test_utils::claim_xp(scenario, get_USER_1());
@@ -159,7 +159,7 @@ module loyalty_gm::token_tests {
     #[test]
     #[expected_failure(abort_code = loyalty_gm::reward_store::EAlreadyClaimed)]
     fun claim_reward_twice() {
-        let scenario_val = init_finish_task();
+        let scenario_val = init_finish_quest();
         let scenario = &mut scenario_val;
 
         test_utils::claim_xp(scenario, get_USER_1());
@@ -174,19 +174,19 @@ module loyalty_gm::token_tests {
     #[test]
     #[expected_failure(abort_code = loyalty_gm::reward_store::ERewardPoolExceeded)]
     fun claim_exceeded_reward() {
-        let (scenario_val, task_id) = init_add_task(0, 0);
+        let (scenario_val, quest_id) = init_add_quest(0, 0);
         let scenario = &mut scenario_val;
         test_utils::get_verifier(scenario);
 
 
         test_utils::mint_token(scenario, get_USER_1());
-        test_utils::start_task(scenario, get_USER_1(), task_id);
-        test_utils::finish_task(scenario, get_USER_1(), task_id);
+        test_utils::start_quest(scenario, get_USER_1(), quest_id);
+        test_utils::finish_quest(scenario, get_USER_1(), quest_id);
         test_utils::claim_xp(scenario, get_USER_1());
 
         test_utils::mint_token(scenario, get_USER_2());
-        test_utils::start_task(scenario, get_USER_2(), task_id);
-        test_utils::finish_task(scenario, get_USER_2(), task_id);
+        test_utils::start_quest(scenario, get_USER_2(), quest_id);
+        test_utils::finish_quest(scenario, get_USER_2(), quest_id);
         test_utils::claim_xp(scenario, get_USER_2());
 
         test_utils::add_single_reward(scenario);
@@ -199,14 +199,14 @@ module loyalty_gm::token_tests {
     #[test]
     #[expected_failure(abort_code = loyalty_gm::loyalty_token::EInvalidLvl)]
     fun claim_reward_invalid_lvl() {
-        let (scenario_val, task_id) = init_add_task(0, 0);
+        let (scenario_val, quest_id) = init_add_quest(0, 0);
         let scenario = &mut scenario_val;
         test_utils::get_verifier(scenario);
 
 
         test_utils::mint_token(scenario, get_USER_1());
-        test_utils::start_task(scenario, get_USER_1(), task_id);
-        test_utils::finish_task(scenario, get_USER_1(), task_id);
+        test_utils::start_quest(scenario, get_USER_1(), quest_id);
+        test_utils::finish_quest(scenario, get_USER_1(), quest_id);
 
         test_utils::add_single_reward(scenario);
         test_utils::claim_reward(scenario, get_USER_1(), get_REWARD_LVL());

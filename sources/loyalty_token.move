@@ -15,7 +15,7 @@ module loyalty_gm::loyalty_token {
 
     use loyalty_gm::loyalty_system::{Self, LoyaltySystem};
     use loyalty_gm::reward_store;
-    use loyalty_gm::task_store;
+    use loyalty_gm::quest_store;
     use loyalty_gm::user_store;
 
     // ======== Constants =========
@@ -148,21 +148,21 @@ module loyalty_gm::loyalty_token {
 
     /**
         This function is called by the user.
-        User function to start task.
-        Verifier cant finish task if user didnt start it.
+        User function to start quest.
+        Verifier cant finish quest if user didnt start it.
     */
-    public entry fun start_task(
+    public entry fun start_quest(
         loyalty_system: &mut LoyaltySystem,
         token: &LoyaltyToken,
-        task_id: ID,
+        quest_id: ID,
         ctx: &mut TxContext
     ) {
         assert!(
-            token.level >= task_store::get_task_lvl(loyalty_system::get_tasks(loyalty_system), &task_id),
+            token.level >= quest_store::get_quest_lvl(loyalty_system::get_quests(loyalty_system), &quest_id),
             EInvalidLvl
         );
-        task_store::increment_task_started_count(loyalty_system::get_mut_tasks(loyalty_system), &task_id);
-        user_store::start_task(loyalty_system::get_mut_user_store(loyalty_system), &task_id, tx_context::sender(ctx))
+        quest_store::increment_quest_started_count(loyalty_system::get_mut_quests(loyalty_system), &quest_id);
+        user_store::start_quest(loyalty_system::get_mut_user_store(loyalty_system), &quest_id, tx_context::sender(ctx))
     }
 
     // ======= Private and Utility functions =======

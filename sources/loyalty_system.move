@@ -1,7 +1,7 @@
 /**
     Loyalty System Module.
     This module contains the implementation of the Loyalty System.
-    Module for creating and managing loyalty systems by the admin and verifying tasks by the verifier.
+    Module for creating and managing loyalty systems by the admin and verifying quests by the verifier.
 */
 module loyalty_gm::loyalty_system {
     use std::string::{Self, String};
@@ -21,7 +21,7 @@ module loyalty_gm::loyalty_system {
 
     use loyalty_gm::reward_store::{Self, Reward};
     use loyalty_gm::system_store::{Self, SystemStore, SYSTEM_STORE};
-    use loyalty_gm::task_store::{Self, Task};
+    use loyalty_gm::quest_store::{Self, Quest};
     use loyalty_gm::user_store::{Self, User};
 
     friend loyalty_gm::loyalty_token;
@@ -55,7 +55,7 @@ module loyalty_gm::loyalty_system {
     }
 
     /**
-        Verifier capability to finish tasks.
+        Verifier capability to finish quests.
         Created once per package.
     */
     struct VerifierCap has key, store {
@@ -82,8 +82,8 @@ module loyalty_gm::loyalty_system {
         creator: address,
         /// Max level of the loyalty NFTs
         max_lvl: u64,
-        /// Tasks of the loyalty system task_ID -> Task
-        tasks: VecMap<ID, Task>,
+        /// Quests of the loyalty system quest_ID -> Quest
+        quests: VecMap<ID, Quest>,
         /// Rewards of the loyalty system reward_lvl -> Reward
         rewards: VecMap<u64, Reward>,
 
@@ -147,7 +147,7 @@ module loyalty_gm::loyalty_system {
             max_supply,
             creator,
             max_lvl,
-            tasks: task_store::empty(),
+            quests: quest_store::empty(),
             rewards: reward_store::empty(),
         };
         dof::add(&mut loyalty_system.id, USER_STORE_KEY, user_store::new(ctx));
@@ -288,13 +288,13 @@ module loyalty_gm::loyalty_system {
         reward_store::remove_reward(&mut loyalty_system.rewards, level, ctx);
     }
 
-    // ======== Admin Functions: Tasks
+    // ======== Admin Functions: Quests
 
     /**
-        Add a new task to the loyalty system.
-        Users can complete tasks to earn XP.
+        Add a new quest to the loyalty system.
+        Users can complete quests to earn XP.
     */
-    public entry fun add_task(
+    public entry fun add_quest(
         admin_cap: &AdminCap,
         loyalty_system: &mut LoyaltySystem,
         lvl: u64,
@@ -310,8 +310,8 @@ module loyalty_gm::loyalty_system {
     ) {
         check_admin(admin_cap, loyalty_system);
 
-        task_store::add_task(
-            &mut loyalty_system.tasks,
+        quest_store::add_quest(
+            &mut loyalty_system.quests,
             lvl,
             name,
             description,
@@ -326,40 +326,40 @@ module loyalty_gm::loyalty_system {
     }
 
     /**
-        Remove a task from the loyalty system.
+        Remove a quest from the loyalty system.
     */
-    public entry fun remove_task(
+    public entry fun remove_quest(
         admin_cap: &AdminCap,
         loyalty_system: &mut LoyaltySystem,
-        task_id: ID,
+        quest_id: ID,
         _: &mut TxContext
     ) {
         check_admin(admin_cap, loyalty_system);
 
-        task_store::remove_task(&mut loyalty_system.tasks, &task_id);
+        quest_store::remove_quest(&mut loyalty_system.quests, &quest_id);
     }
 
     // ======= Verifier functions =======
 
     /**
-        Verifier function to finish a task.
+        Verifier function to finish a quest.
         This function is called by publisher.
     */
-    public entry fun finish_task(
+    public entry fun finish_quest(
         _: &VerifierCap,
         loyalty_system: &mut LoyaltySystem,
-        task_id: ID,
+        quest_id: ID,
         user: address
     ) {
-        let reward_xp = task_store::get_task_reward(&loyalty_system.tasks, &task_id);
+        let reward_xp = quest_store::get_quest_reward(&loyalty_system.quests, &quest_id);
         let user_store = get_mut_user_store(loyalty_system);
-        user_store::finish_task(
+        user_store::finish_quest(
             user_store,
-            &task_id,
+            &quest_id,
             user,
             reward_xp
         );
-        task_store::increment_task_completed_count(&mut loyalty_system.tasks, &task_id);
+        quest_store::increment_quest_completed_count(&mut loyalty_system.quests, &quest_id);
     }
 
     // ======= Public functions =======
@@ -373,8 +373,8 @@ module loyalty_gm::loyalty_system {
         dof::borrow_mut(&mut loyalty_system.id, USER_STORE_KEY)
     }
 
-    public(friend) fun get_mut_tasks(loyalty_system: &mut LoyaltySystem): &mut VecMap<ID, Task> {
-        &mut loyalty_system.tasks
+    public(friend) fun get_mut_quests(loyalty_system: &mut LoyaltySystem): &mut VecMap<ID, Quest> {
+        &mut loyalty_system.quests
     }
 
     /**
@@ -428,8 +428,8 @@ module loyalty_gm::loyalty_system {
         loyalty_system.max_lvl
     }
 
-    public fun get_tasks(loyalty_system: &LoyaltySystem): &VecMap<ID, Task> {
-        &loyalty_system.tasks
+    public fun get_quests(loyalty_system: &LoyaltySystem): &VecMap<ID, Quest> {
+        &loyalty_system.quests
     }
 
     public fun get_rewards(loyalty_system: &LoyaltySystem): &VecMap<u64, Reward> {

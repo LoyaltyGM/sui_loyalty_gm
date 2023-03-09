@@ -12,7 +12,7 @@ module loyalty_gm::system_tests {
 
     use loyalty_gm::loyalty_system::{Self, LoyaltySystem, AdminCap};
     use loyalty_gm::system_store::{Self, SystemStore, SYSTEM_STORE};
-    use loyalty_gm::test_utils::{Self, get_ADMIN, get_USER_1, get_USER_2, get_LS_NAME, get_LS_DESCRIPTION, get_LS_URL, get_LS_MAX_SUPPLY, get_LS_MAX_LVL, get_TASK_REWARD, get_REWARD_POOL_AMT};
+    use loyalty_gm::test_utils::{Self, get_ADMIN, get_USER_1, get_USER_2, get_LS_NAME, get_LS_DESCRIPTION, get_LS_URL, get_LS_MAX_SUPPLY, get_LS_MAX_LVL, get_QUEST_REWARD, get_REWARD_POOL_AMT};
 
     // ======== Errors =========
 
@@ -33,35 +33,35 @@ module loyalty_gm::system_tests {
     }
 
     #[test_only]
-    public fun init_add_task(task_lvl: u64, completed_supply: u64): (Scenario, object::ID) {
+    public fun init_add_quest(quest_lvl: u64, completed_supply: u64): (Scenario, object::ID) {
         let scenario_val = init_create_loyalty_system();
         let scenario = &mut scenario_val;
-        let task_id: object::ID;
+        let quest_id: object::ID;
 
-        test_utils::add_task(scenario, task_lvl, completed_supply);
+        test_utils::add_quest(scenario, quest_lvl, completed_supply);
 
         test_scenario::next_tx(scenario, get_ADMIN());
         {
             let ls = test_scenario::take_shared<LoyaltySystem>(scenario);
-            let (id, _) = vec_map::get_entry_by_idx(loyalty_system::get_tasks(&ls), 0);
-            task_id = *id;
+            let (id, _) = vec_map::get_entry_by_idx(loyalty_system::get_quests(&ls), 0);
+            quest_id = *id;
             test_scenario::return_shared(ls);
         };
 
-        (scenario_val, task_id)
+        (scenario_val, quest_id)
     }
 
     #[test_only]
-    public fun init_finish_task(): Scenario {
-        let (scenario_val, task_id) = init_add_task(0, 0);
+    public fun init_finish_quest(): Scenario {
+        let (scenario_val, quest_id) = init_add_quest(0, 0);
         let scenario = &mut scenario_val;
 
         test_utils::get_verifier(scenario);
 
         test_utils::mint_token(scenario, get_USER_1());
-        test_utils::start_task(scenario, get_USER_1(), task_id);
+        test_utils::start_quest(scenario, get_USER_1(), quest_id);
 
-        test_utils::finish_task(scenario, get_USER_1(), task_id);
+        test_utils::finish_quest(scenario, get_USER_1(), quest_id);
 
         scenario_val
     }
@@ -148,18 +148,18 @@ module loyalty_gm::system_tests {
         test_scenario::end(scenario_val);
     }
 
-    // ======== Tasks
+    // ======== Quests
 
     #[test]
-    public fun add_task() {
-        let (scenario_val, _) = init_add_task(0, 0);
+    public fun add_quest() {
+        let (scenario_val, _) = init_add_quest(0, 0);
         let scenario = &mut scenario_val;
 
         test_scenario::next_tx(scenario, get_ADMIN());
         {
             let ls = test_scenario::take_shared<LoyaltySystem>(scenario);
 
-            assert!(vec_map::size(loyalty_system::get_tasks(&ls)) == 1, Error);
+            assert!(vec_map::size(loyalty_system::get_quests(&ls)) == 1, Error);
 
             test_scenario::return_shared(ls);
         };
@@ -168,15 +168,15 @@ module loyalty_gm::system_tests {
     }
 
     #[test]
-    public fun finish_task() {
-        let scenario_val = init_finish_task();
+    public fun finish_quest() {
+        let scenario_val = init_finish_quest();
         let scenario = &mut scenario_val;
 
         test_scenario::next_tx(scenario, get_ADMIN());
         {
             let ls = test_scenario::take_shared<LoyaltySystem>(scenario);
 
-            assert!(loyalty_system::get_claimable_xp_test(&ls, get_USER_1()) == get_TASK_REWARD(), Error);
+            assert!(loyalty_system::get_claimable_xp_test(&ls, get_USER_1()) == get_QUEST_REWARD(), Error);
 
             test_scenario::return_shared(ls);
         };
@@ -185,85 +185,85 @@ module loyalty_gm::system_tests {
     }
 
     #[test]
-    #[expected_failure(abort_code = loyalty_gm::task_store::ETaskCompletedSupplyReached)]
-    public fun finish_task_completed_supply() {
-        let (scenario_val, task_id) = init_add_task(0, 1);
+    #[expected_failure(abort_code = loyalty_gm::quest_store::EQuestCompletedSupplyReached)]
+    public fun finish_quest_completed_supply() {
+        let (scenario_val, quest_id) = init_add_quest(0, 1);
         let scenario = &mut scenario_val;
 
         test_utils::get_verifier(scenario);
 
         test_utils::mint_token(scenario, get_USER_1());
-        test_utils::start_task(scenario, get_USER_1(), task_id);
-        test_utils::finish_task(scenario, get_USER_1(), task_id);
+        test_utils::start_quest(scenario, get_USER_1(), quest_id);
+        test_utils::finish_quest(scenario, get_USER_1(), quest_id);
 
         test_utils::mint_token(scenario, get_USER_2());
-        test_utils::start_task(scenario, get_USER_2(), task_id);
-        test_utils::finish_task(scenario, get_USER_2(), task_id);
+        test_utils::start_quest(scenario, get_USER_2(), quest_id);
+        test_utils::finish_quest(scenario, get_USER_2(), quest_id);
 
         test_scenario::end(scenario_val);
     }
 
     #[test]
-    #[expected_failure(abort_code = loyalty_gm::user_store::ETaskAlreadyDone)]
-    public fun start_task_twice() {
-        let (scenario_val, task_id) = init_add_task(0, 0);
+    #[expected_failure(abort_code = loyalty_gm::user_store::EQuestAlreadyDone)]
+    public fun start_quest_twice() {
+        let (scenario_val, quest_id) = init_add_quest(0, 0);
         let scenario = &mut scenario_val;
 
         test_utils::get_verifier(scenario);
 
         test_utils::mint_token(scenario, get_USER_1());
-        test_utils::start_task(scenario, get_USER_1(), task_id);
+        test_utils::start_quest(scenario, get_USER_1(), quest_id);
 
-        test_utils::finish_task(scenario, get_USER_1(), task_id);
+        test_utils::finish_quest(scenario, get_USER_1(), quest_id);
 
-        test_utils::start_task(scenario, get_USER_1(), task_id);
+        test_utils::start_quest(scenario, get_USER_1(), quest_id);
 
         test_scenario::end(scenario_val);
     }
 
     #[test]
-    #[expected_failure(abort_code = loyalty_gm::user_store::ETaskAlreadyDone)]
-    public fun finish_task_twice() {
-        let (scenario_val, task_id) = init_add_task(0, 0);
+    #[expected_failure(abort_code = loyalty_gm::user_store::EQuestAlreadyDone)]
+    public fun finish_quest_twice() {
+        let (scenario_val, quest_id) = init_add_quest(0, 0);
         let scenario = &mut scenario_val;
 
         test_utils::get_verifier(scenario);
 
         test_utils::mint_token(scenario, get_USER_1());
-        test_utils::start_task(scenario, get_USER_1(), task_id);
+        test_utils::start_quest(scenario, get_USER_1(), quest_id);
 
-        test_utils::finish_task(scenario, get_USER_1(), task_id);
-        test_utils::finish_task(scenario, get_USER_1(), task_id);
+        test_utils::finish_quest(scenario, get_USER_1(), quest_id);
+        test_utils::finish_quest(scenario, get_USER_1(), quest_id);
 
         test_scenario::end(scenario_val);
     }
 
     #[test]
-    #[expected_failure(abort_code = loyalty_gm::user_store::ETaskNotStarted)]
-    public fun finish_not_started_task() {
-        let (scenario_val, task_id) = init_add_task(0, 0);
+    #[expected_failure(abort_code = loyalty_gm::user_store::EQuestNotStarted)]
+    public fun finish_not_started_quest() {
+        let (scenario_val, quest_id) = init_add_quest(0, 0);
         let scenario = &mut scenario_val;
 
         test_utils::get_verifier(scenario);
         test_utils::mint_token(scenario, get_USER_1());
 
-        test_utils::finish_task(scenario, get_USER_1(), task_id);
+        test_utils::finish_quest(scenario, get_USER_1(), quest_id);
 
         test_scenario::end(scenario_val);
     }
 
     #[test]
-    fun remove_task() {
-        let (scenario_val, task_id) = init_add_task(0, 0);
+    fun remove_quest() {
+        let (scenario_val, quest_id) = init_add_quest(0, 0);
         let scenario = &mut scenario_val;
 
-        test_utils::remove_task(scenario, task_id);
+        test_utils::remove_quest(scenario, quest_id);
 
         test_scenario::next_tx(scenario, get_ADMIN());
         {
             let ls = test_scenario::take_shared<LoyaltySystem>(scenario);
 
-            assert!(vec_map::size(loyalty_system::get_tasks(&ls)) == 0, Error);
+            assert!(vec_map::size(loyalty_system::get_quests(&ls)) == 0, Error);
 
             test_scenario::return_shared(ls);
         };

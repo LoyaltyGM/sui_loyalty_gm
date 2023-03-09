@@ -78,7 +78,7 @@ module loyalty_gm::reward_store {
 
     /**
         Reward Token struct.
-        This struct represents a reward token sent to the user after completing a task.
+        This struct represents a reward token sent to the user after completing a quest.
         This token can be sent by the user to another user
     */
     struct NftReward has key, store {
@@ -94,7 +94,7 @@ module loyalty_gm::reward_store {
 
     /**
         Soulbond Reward struct.
-        This struct represents a reward token sent to the user after completing a task.
+        This struct represents a reward token sent to the user after completing a quest.
         This token can NOT be sent by the user to another user
     */
     struct SoulbondReward has key {
