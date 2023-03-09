@@ -185,7 +185,7 @@ module loyalty_gm::reward_store {
         reward_supply: u64,
         ctx: &mut TxContext
     ) {
-        add_transferable_reward(
+        add_asset_reward(
             store,
             NFT_REWARD_TYPE,
             level,
@@ -204,7 +204,7 @@ module loyalty_gm::reward_store {
         reward_supply: u64,
         ctx: &mut TxContext
     ) {
-        add_transferable_reward(
+        add_asset_reward(
             store,
             SOULBOND_REWARD_TYPE,
             level,
@@ -259,7 +259,7 @@ module loyalty_gm::reward_store {
 
     // ======== Private functions =========
 
-    fun add_transferable_reward(
+    fun add_asset_reward(
         store: &mut VecMap<u64, Reward>,
         type: u64,
         level: u64,
