@@ -16,7 +16,7 @@ Module for minting and managing Loyalty NFT by users.
 -  [Function `mint`](#0x0_loyalty_token_mint)
 -  [Function `claim_xp`](#0x0_loyalty_token_claim_xp)
 -  [Function `claim_reward`](#0x0_loyalty_token_claim_reward)
--  [Function `start_task`](#0x0_loyalty_token_start_task)
+-  [Function `start_quest`](#0x0_loyalty_token_start_quest)
 -  [Function `update_token_stats`](#0x0_loyalty_token_update_token_stats)
 -  [Function `get_lvl_by_xp`](#0x0_loyalty_token_get_lvl_by_xp)
 -  [Function `get_xp_by_lvl`](#0x0_loyalty_token_get_xp_by_lvl)
@@ -24,8 +24,8 @@ Module for minting and managing Loyalty NFT by users.
 
 
 <pre><code><b>use</b> <a href="loyalty_system.md#0x0_loyalty_system">0x0::loyalty_system</a>;
+<b>use</b> <a href="quest_store.md#0x0_quest_store">0x0::quest_store</a>;
 <b>use</b> <a href="reward_store.md#0x0_reward_store">0x0::reward_store</a>;
-<b>use</b> <a href="task_store.md#0x0_task_store">0x0::task_store</a>;
 <b>use</b> <a href="user_store.md#0x0_user_store">0x0::user_store</a>;
 <b>use</b> <a href="">0x1::string</a>;
 <b>use</b> <a href="">0x2::event</a>;
@@ -92,7 +92,7 @@ It contains the ID of the LoyaltySystem it belongs to, its name, description, ur
 
 </dd>
 <dt>
-<code>lvl: u64</code>
+<code>level: u64</code>
 </dt>
 <dd>
  Current level of the token.
@@ -279,7 +279,7 @@ The token is minted with the same name, description and url as the LoyaltySystem
         name: *<a href="loyalty_system.md#0x0_loyalty_system_get_name">loyalty_system::get_name</a>(ls),
         description: *<a href="loyalty_system.md#0x0_loyalty_system_get_description">loyalty_system::get_description</a>(ls),
         <a href="">url</a>: *<a href="loyalty_system.md#0x0_loyalty_system_get_url">loyalty_system::get_url</a>(ls),
-        lvl: <a href="loyalty_token.md#0x0_loyalty_token_INITIAL_LVL">INITIAL_LVL</a>,
+        level: <a href="loyalty_token.md#0x0_loyalty_token_INITIAL_LVL">INITIAL_LVL</a>,
         xp: <a href="loyalty_token.md#0x0_loyalty_token_INITIAL_XP">INITIAL_XP</a>,
         xp_to_next_lvl: <a href="loyalty_token.md#0x0_loyalty_token_get_xp_to_next_lvl">get_xp_to_next_lvl</a>(<a href="loyalty_token.md#0x0_loyalty_token_INITIAL_LVL">INITIAL_LVL</a>, <a href="loyalty_token.md#0x0_loyalty_token_INITIAL_XP">INITIAL_XP</a>),
     };
@@ -371,8 +371,12 @@ Aborts if the token's level is lower than the reward's level.
     reward_lvl: u64,
     ctx: &<b>mut</b> TxContext
 ) {
-    <b>assert</b>!(token.lvl &gt;= reward_lvl, <a href="loyalty_token.md#0x0_loyalty_token_EInvalidLvl">EInvalidLvl</a>);
-    <a href="reward_store.md#0x0_reward_store_claim_reward">reward_store::claim_reward</a>(<a href="loyalty_system.md#0x0_loyalty_system_get_mut_reward">loyalty_system::get_mut_reward</a>(ls, reward_lvl), ctx);
+    <b>assert</b>!(token.level &gt;= reward_lvl, <a href="loyalty_token.md#0x0_loyalty_token_EInvalidLvl">EInvalidLvl</a>);
+    <a href="reward_store.md#0x0_reward_store_claim_reward">reward_store::claim_reward</a>(
+        <a href="_id">object::id</a>(ls),
+        <a href="loyalty_system.md#0x0_loyalty_system_get_mut_reward">loyalty_system::get_mut_reward</a>(ls, reward_lvl),
+        ctx
+    );
 }
 </code></pre>
 
@@ -380,18 +384,18 @@ Aborts if the token's level is lower than the reward's level.
 
 </details>
 
-<a name="0x0_loyalty_token_start_task"></a>
+<a name="0x0_loyalty_token_start_quest"></a>
 
-## Function `start_task`
+## Function `start_quest`
 
 
 This function is called by the user.
-User function to start task.
-Verifier cant finish task if user didnt start it.
+User function to start quest.
+Verifier cant finish quest if user didnt start it.
 
 
 
-<pre><code><b>public</b> entry <b>fun</b> <a href="loyalty_token.md#0x0_loyalty_token_start_task">start_task</a>(<a href="loyalty_system.md#0x0_loyalty_system">loyalty_system</a>: &<b>mut</b> <a href="loyalty_system.md#0x0_loyalty_system_LoyaltySystem">loyalty_system::LoyaltySystem</a>, token: &<a href="loyalty_token.md#0x0_loyalty_token_LoyaltyToken">loyalty_token::LoyaltyToken</a>, task_id: <a href="_ID">object::ID</a>, ctx: &<b>mut</b> <a href="_TxContext">tx_context::TxContext</a>)
+<pre><code><b>public</b> entry <b>fun</b> <a href="loyalty_token.md#0x0_loyalty_token_start_quest">start_quest</a>(<a href="loyalty_system.md#0x0_loyalty_system">loyalty_system</a>: &<b>mut</b> <a href="loyalty_system.md#0x0_loyalty_system_LoyaltySystem">loyalty_system::LoyaltySystem</a>, token: &<a href="loyalty_token.md#0x0_loyalty_token_LoyaltyToken">loyalty_token::LoyaltyToken</a>, quest_id: <a href="_ID">object::ID</a>, ctx: &<b>mut</b> <a href="_TxContext">tx_context::TxContext</a>)
 </code></pre>
 
 
@@ -400,18 +404,18 @@ Verifier cant finish task if user didnt start it.
 <summary>Implementation</summary>
 
 
-<pre><code><b>public</b> entry <b>fun</b> <a href="loyalty_token.md#0x0_loyalty_token_start_task">start_task</a>(
+<pre><code><b>public</b> entry <b>fun</b> <a href="loyalty_token.md#0x0_loyalty_token_start_quest">start_quest</a>(
     <a href="loyalty_system.md#0x0_loyalty_system">loyalty_system</a>: &<b>mut</b> LoyaltySystem,
     token: &<a href="loyalty_token.md#0x0_loyalty_token_LoyaltyToken">LoyaltyToken</a>,
-    task_id: ID,
+    quest_id: ID,
     ctx: &<b>mut</b> TxContext
 ) {
     <b>assert</b>!(
-        token.lvl &gt;= <a href="task_store.md#0x0_task_store_get_task_lvl">task_store::get_task_lvl</a>(<a href="loyalty_system.md#0x0_loyalty_system_get_tasks">loyalty_system::get_tasks</a>(<a href="loyalty_system.md#0x0_loyalty_system">loyalty_system</a>), &task_id),
+        token.level &gt;= <a href="quest_store.md#0x0_quest_store_get_quest_lvl">quest_store::get_quest_lvl</a>(<a href="loyalty_system.md#0x0_loyalty_system_get_quests">loyalty_system::get_quests</a>(<a href="loyalty_system.md#0x0_loyalty_system">loyalty_system</a>), &quest_id),
         <a href="loyalty_token.md#0x0_loyalty_token_EInvalidLvl">EInvalidLvl</a>
     );
-    <a href="task_store.md#0x0_task_store_increment_task_started_count">task_store::increment_task_started_count</a>(<a href="loyalty_system.md#0x0_loyalty_system_get_mut_tasks">loyalty_system::get_mut_tasks</a>(<a href="loyalty_system.md#0x0_loyalty_system">loyalty_system</a>), &task_id);
-    <a href="user_store.md#0x0_user_store_start_task">user_store::start_task</a>(<a href="loyalty_system.md#0x0_loyalty_system_get_mut_user_store">loyalty_system::get_mut_user_store</a>(<a href="loyalty_system.md#0x0_loyalty_system">loyalty_system</a>), &task_id, <a href="_sender">tx_context::sender</a>(ctx))
+    <a href="quest_store.md#0x0_quest_store_increment_quest_started_count">quest_store::increment_quest_started_count</a>(<a href="loyalty_system.md#0x0_loyalty_system_get_mut_quests">loyalty_system::get_mut_quests</a>(<a href="loyalty_system.md#0x0_loyalty_system">loyalty_system</a>), &quest_id);
+    <a href="user_store.md#0x0_user_store_start_quest">user_store::start_quest</a>(<a href="loyalty_system.md#0x0_loyalty_system_get_mut_user_store">loyalty_system::get_mut_user_store</a>(<a href="loyalty_system.md#0x0_loyalty_system">loyalty_system</a>), &quest_id, <a href="_sender">tx_context::sender</a>(ctx))
 }
 </code></pre>
 
@@ -449,7 +453,7 @@ Update the token's level and XP based on the given XP to add.
     token.xp_to_next_lvl = <a href="loyalty_token.md#0x0_loyalty_token_get_xp_to_next_lvl">get_xp_to_next_lvl</a>(new_lvl, new_xp);
 
     <b>let</b> max_lvl = <a href="loyalty_system.md#0x0_loyalty_system_get_max_lvl">loyalty_system::get_max_lvl</a>(ls);
-    token.lvl = <b>if</b> (new_lvl &lt;= max_lvl) new_lvl <b>else</b> max_lvl;
+    token.level = <b>if</b> (new_lvl &lt;= max_lvl) new_lvl <b>else</b> max_lvl;
 }
 </code></pre>
 

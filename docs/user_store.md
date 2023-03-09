@@ -15,8 +15,8 @@ Its functions are only accessible by the friend modules.
 -  [Function `add_user`](#0x0_user_store_add_user)
 -  [Function `update_user_xp`](#0x0_user_store_update_user_xp)
 -  [Function `reset_user_xp`](#0x0_user_store_reset_user_xp)
--  [Function `start_task`](#0x0_user_store_start_task)
--  [Function `finish_task`](#0x0_user_store_finish_task)
+-  [Function `start_quest`](#0x0_user_store_start_quest)
+-  [Function `finish_quest`](#0x0_user_store_finish_quest)
 -  [Function `size`](#0x0_user_store_size)
 -  [Function `get_user`](#0x0_user_store_get_user)
 -  [Function `user_exists`](#0x0_user_store_user_exists)
@@ -63,16 +63,16 @@ User data.
  Address of the user that data belongs to.
 </dd>
 <dt>
-<code>active_tasks: <a href="_VecSet">vec_set::VecSet</a>&lt;<a href="_ID">object::ID</a>&gt;</code>
+<code>active_quests: <a href="_VecSet">vec_set::VecSet</a>&lt;<a href="_ID">object::ID</a>&gt;</code>
 </dt>
 <dd>
- Tasks that are currently active.
+ Quests that are currently active.
 </dd>
 <dt>
-<code>done_tasks: <a href="_VecSet">vec_set::VecSet</a>&lt;<a href="_ID">object::ID</a>&gt;</code>
+<code>done_quests: <a href="_VecSet">vec_set::VecSet</a>&lt;<a href="_ID">object::ID</a>&gt;</code>
 </dt>
 <dd>
- Tasks that are already done.
+ Quests that are already done.
 </dd>
 <dt>
 <code>claimable_xp: u64</code>
@@ -90,20 +90,20 @@ User data.
 ## Constants
 
 
-<a name="0x0_user_store_ETaskAlreadyDone"></a>
+<a name="0x0_user_store_EQuestAlreadyDone"></a>
 
 
 
-<pre><code><b>const</b> <a href="user_store.md#0x0_user_store_ETaskAlreadyDone">ETaskAlreadyDone</a>: u64 = 0;
+<pre><code><b>const</b> <a href="user_store.md#0x0_user_store_EQuestAlreadyDone">EQuestAlreadyDone</a>: u64 = 0;
 </code></pre>
 
 
 
-<a name="0x0_user_store_ETaskNotStarted"></a>
+<a name="0x0_user_store_EQuestNotStarted"></a>
 
 
 
-<pre><code><b>const</b> <a href="user_store.md#0x0_user_store_ETaskNotStarted">ETaskNotStarted</a>: u64 = 1;
+<pre><code><b>const</b> <a href="user_store.md#0x0_user_store_EQuestNotStarted">EQuestNotStarted</a>: u64 = 1;
 </code></pre>
 
 
@@ -171,8 +171,8 @@ Add a new user to the store.
     <b>let</b> owner = <a href="_sender">tx_context::sender</a>(ctx);
     <b>let</b> data = <a href="user_store.md#0x0_user_store_User">User</a> {
         token_id: *token_id,
-        active_tasks: <a href="_empty">vec_set::empty</a>(),
-        done_tasks: <a href="_empty">vec_set::empty</a>(),
+        active_quests: <a href="_empty">vec_set::empty</a>(),
+        done_quests: <a href="_empty">vec_set::empty</a>(),
         owner,
         claimable_xp: <a href="user_store.md#0x0_user_store_INITIAL_XP">INITIAL_XP</a>,
     };
@@ -245,16 +245,16 @@ Reset the user's XP to INITIAL_XP.
 
 </details>
 
-<a name="0x0_user_store_start_task"></a>
+<a name="0x0_user_store_start_quest"></a>
 
-## Function `start_task`
-
-
-Start a task with the given ID for the user.
+## Function `start_quest`
 
 
+Start a quest with the given ID for the user.
 
-<pre><code><b>public</b>(<b>friend</b>) <b>fun</b> <a href="user_store.md#0x0_user_store_start_task">start_task</a>(store: &<b>mut</b> <a href="_Table">table::Table</a>&lt;<b>address</b>, <a href="user_store.md#0x0_user_store_User">user_store::User</a>&gt;, task_id: &<a href="_ID">object::ID</a>, owner: <b>address</b>)
+
+
+<pre><code><b>public</b>(<b>friend</b>) <b>fun</b> <a href="user_store.md#0x0_user_store_start_quest">start_quest</a>(store: &<b>mut</b> <a href="_Table">table::Table</a>&lt;<b>address</b>, <a href="user_store.md#0x0_user_store_User">user_store::User</a>&gt;, quest_id: &<a href="_ID">object::ID</a>, owner: <b>address</b>)
 </code></pre>
 
 
@@ -263,10 +263,10 @@ Start a task with the given ID for the user.
 <summary>Implementation</summary>
 
 
-<pre><code><b>public</b>(<b>friend</b>) <b>fun</b> <a href="user_store.md#0x0_user_store_start_task">start_task</a>(store: &<b>mut</b> Table&lt;<b>address</b>, <a href="user_store.md#0x0_user_store_User">User</a>&gt;, task_id: &ID, owner: <b>address</b>) {
+<pre><code><b>public</b>(<b>friend</b>) <b>fun</b> <a href="user_store.md#0x0_user_store_start_quest">start_quest</a>(store: &<b>mut</b> Table&lt;<b>address</b>, <a href="user_store.md#0x0_user_store_User">User</a>&gt;, quest_id: &ID, owner: <b>address</b>) {
     <b>let</b> user_data = <a href="_borrow_mut">table::borrow_mut</a>&lt;<b>address</b>, <a href="user_store.md#0x0_user_store_User">User</a>&gt;(store, owner);
-    <b>assert</b>!(!<a href="_contains">vec_set::contains</a>(&user_data.done_tasks, task_id), <a href="user_store.md#0x0_user_store_ETaskAlreadyDone">ETaskAlreadyDone</a>);
-    <a href="_insert">vec_set::insert</a>(&<b>mut</b> user_data.active_tasks, *task_id)
+    <b>assert</b>!(!<a href="_contains">vec_set::contains</a>(&user_data.done_quests, quest_id), <a href="user_store.md#0x0_user_store_EQuestAlreadyDone">EQuestAlreadyDone</a>);
+    <a href="_insert">vec_set::insert</a>(&<b>mut</b> user_data.active_quests, *quest_id)
 }
 </code></pre>
 
@@ -274,16 +274,16 @@ Start a task with the given ID for the user.
 
 </details>
 
-<a name="0x0_user_store_finish_task"></a>
+<a name="0x0_user_store_finish_quest"></a>
 
-## Function `finish_task`
-
-
-Finish a task with the given ID for the user.
+## Function `finish_quest`
 
 
+Finish a quest with the given ID for the user.
 
-<pre><code><b>public</b>(<b>friend</b>) <b>fun</b> <a href="user_store.md#0x0_user_store_finish_task">finish_task</a>(store: &<b>mut</b> <a href="_Table">table::Table</a>&lt;<b>address</b>, <a href="user_store.md#0x0_user_store_User">user_store::User</a>&gt;, task_id: &<a href="_ID">object::ID</a>, owner: <b>address</b>, reward_xp: u64)
+
+
+<pre><code><b>public</b>(<b>friend</b>) <b>fun</b> <a href="user_store.md#0x0_user_store_finish_quest">finish_quest</a>(store: &<b>mut</b> <a href="_Table">table::Table</a>&lt;<b>address</b>, <a href="user_store.md#0x0_user_store_User">user_store::User</a>&gt;, quest_id: &<a href="_ID">object::ID</a>, owner: <b>address</b>, reward_xp: u64)
 </code></pre>
 
 
@@ -292,19 +292,19 @@ Finish a task with the given ID for the user.
 <summary>Implementation</summary>
 
 
-<pre><code><b>public</b>(<b>friend</b>) <b>fun</b> <a href="user_store.md#0x0_user_store_finish_task">finish_task</a>(
+<pre><code><b>public</b>(<b>friend</b>) <b>fun</b> <a href="user_store.md#0x0_user_store_finish_quest">finish_quest</a>(
     store: &<b>mut</b> Table&lt;<b>address</b>, <a href="user_store.md#0x0_user_store_User">User</a>&gt;,
-    task_id: &ID,
+    quest_id: &ID,
     owner: <b>address</b>,
     reward_xp: u64
 ) {
     <b>let</b> user_data = <a href="_borrow_mut">table::borrow_mut</a>&lt;<b>address</b>, <a href="user_store.md#0x0_user_store_User">User</a>&gt;(store, owner);
 
-    <b>assert</b>!(!<a href="_contains">vec_set::contains</a>(&user_data.done_tasks, task_id), <a href="user_store.md#0x0_user_store_ETaskAlreadyDone">ETaskAlreadyDone</a>);
-    <b>assert</b>!(<a href="_contains">vec_set::contains</a>(&user_data.active_tasks, task_id), <a href="user_store.md#0x0_user_store_ETaskNotStarted">ETaskNotStarted</a>);
+    <b>assert</b>!(!<a href="_contains">vec_set::contains</a>(&user_data.done_quests, quest_id), <a href="user_store.md#0x0_user_store_EQuestAlreadyDone">EQuestAlreadyDone</a>);
+    <b>assert</b>!(<a href="_contains">vec_set::contains</a>(&user_data.active_quests, quest_id), <a href="user_store.md#0x0_user_store_EQuestNotStarted">EQuestNotStarted</a>);
 
-    <a href="_remove">vec_set::remove</a>(&<b>mut</b> user_data.active_tasks, task_id);
-    <a href="_insert">vec_set::insert</a>(&<b>mut</b> user_data.done_tasks, *task_id);
+    <a href="_remove">vec_set::remove</a>(&<b>mut</b> user_data.active_quests, quest_id);
+    <a href="_insert">vec_set::insert</a>(&<b>mut</b> user_data.done_quests, *quest_id);
 
     <a href="user_store.md#0x0_user_store_update_user_xp">update_user_xp</a>(store, owner, reward_xp)
 }
