@@ -139,7 +139,11 @@ module loyalty_gm::loyalty_token {
         ctx: &mut TxContext
     ) {
         assert!(token.level >= reward_lvl, EInvalidLvl);
-        reward_store::claim_reward(loyalty_system::get_mut_reward(ls, reward_lvl), ctx);
+        reward_store::claim_reward(
+            object::id(ls),
+            loyalty_system::get_mut_reward(ls, reward_lvl),
+            ctx
+        );
     }
 
     /**

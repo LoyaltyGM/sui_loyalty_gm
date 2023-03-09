@@ -238,20 +238,50 @@ module loyalty_gm::reward_store {
         It transfers the reward to the sender and sets the reward as claimed.
     */
     public(friend) fun claim_reward(
+        loyalty_system: ID,
         reward: &mut Reward,
         ctx: &mut TxContext
     ) {
         check_claimed(reward, ctx);
 
+        let sender = tx_context::sender(ctx);
+
         if (reward.type == COIN_REWARD_TYPE && option::is_some(&reward.reward_per_user)) {
             let pool_amt = balance::value(&reward.reward_pool);
-            let reward_per_user = option::borrow(&reward.reward_per_user);
-            assert!(pool_amt >= *reward_per_user, ERewardPoolExceeded);
+            let reward_per_user = *option::borrow(&reward.reward_per_user);
+            assert!(pool_amt >= reward_per_user, ERewardPoolExceeded);
 
             transfer::transfer(
-                coin::take(&mut reward.reward_pool, *reward_per_user, ctx),
-                tx_context::sender(ctx)
+                coin::take(&mut reward.reward_pool, reward_per_user, ctx),
+                sender
             );
+        } else if (reward.type == NFT_REWARD_TYPE) {
+            let nft_reward = NftReward {
+                id: object::new(ctx),
+                level: reward.level,
+                loyalty_system,
+                reward_id: object::id(reward),
+                name: string::utf8(NFT_REWARD_NAME),
+                description: reward.description,
+                claimer: sender,
+                url: *option::borrow(&reward.url),
+            };
+
+            transfer::transfer(nft_reward, sender);
+        } else if (reward.type == SOULBOND_REWARD_TYPE) {
+            let soulbond_reward = SoulbondReward {
+                id: object::new(ctx),
+                level: reward.level,
+                loyalty_system,
+                reward_id: object::id(reward),
+                name: string::utf8(SOULBOND_REWARD_NAME),
+                description: reward.description,
+                url: *option::borrow(&reward.url),
+            };
+
+            transfer::transfer(soulbond_reward, sender);
+        } else {
+            abort(EInvalidRewardType)
         };
 
         set_reward_claimed(reward, ctx);
