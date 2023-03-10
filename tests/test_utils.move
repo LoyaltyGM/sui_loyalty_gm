@@ -174,7 +174,7 @@ module loyalty_gm::test_utils {
 
     // ======== Utility functions: Rewards
 
-    public fun add_reward(scenario: &mut Scenario) {
+    public fun add_coin_reward(scenario: &mut Scenario) {
         test_scenario::next_tx(scenario, ADMIN);
         {
             let ls = test_scenario::take_shared<LoyaltySystem>(scenario);

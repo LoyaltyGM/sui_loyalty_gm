@@ -274,11 +274,11 @@ module loyalty_gm::system_tests {
     // ======== Rewards
 
     #[test]
-    fun add_reward() {
+    fun add_coin_reward() {
         let scenario_val = init_create_loyalty_system();
         let scenario = &mut scenario_val;
 
-        test_utils::add_reward(scenario);
+        test_utils::add_coin_reward(scenario);
 
         test_scenario::next_tx(scenario, get_ADMIN());
         {
@@ -296,7 +296,7 @@ module loyalty_gm::system_tests {
 
     #[test]
     #[expected_failure(abort_code = loyalty_gm::reward_store::EInvalidSupply)]
-    fun add_invalid_supply_reward() {
+    fun add_invalid_supply_coin_reward() {
         let scenario_val = init_create_loyalty_system();
         let scenario = &mut scenario_val;
 
@@ -307,7 +307,7 @@ module loyalty_gm::system_tests {
 
     #[test]
     #[expected_failure(abort_code = loyalty_gm::loyalty_system::EInvalidLevel)]
-    fun add_invalid_lvl_reward() {
+    fun add_invalid_lvl_coin_reward() {
         let scenario_val = init_create_loyalty_system();
         let scenario = &mut scenario_val;
 
@@ -317,11 +317,11 @@ module loyalty_gm::system_tests {
     }
 
     #[test]
-    fun remove_reward() {
+    fun remove_coin_reward() {
         let scenario_val = init_create_loyalty_system();
         let scenario = &mut scenario_val;
 
-        test_utils::add_reward(scenario);
+        test_utils::add_coin_reward(scenario);
         test_utils::remove_reward(scenario);
 
         test_scenario::next_tx(scenario, get_ADMIN());

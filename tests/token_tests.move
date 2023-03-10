@@ -135,13 +135,13 @@ module loyalty_gm::token_tests {
     // ======== Claim Reward
 
     #[test]
-    fun claim_reward() {
+    fun claim_coin_reward() {
         let scenario_val = init_finish_quest();
         let scenario = &mut scenario_val;
 
         test_utils::claim_xp(scenario, get_USER_1());
 
-        test_utils::add_reward(scenario);
+        test_utils::add_coin_reward(scenario);
         test_utils::claim_reward(scenario, get_USER_1(), get_REWARD_LVL());
 
         test_scenario::next_tx(scenario, get_USER_1());
@@ -158,13 +158,13 @@ module loyalty_gm::token_tests {
 
     #[test]
     #[expected_failure(abort_code = loyalty_gm::reward_store::EAlreadyClaimed)]
-    fun claim_reward_twice() {
+    fun claim_coin_reward_twice() {
         let scenario_val = init_finish_quest();
         let scenario = &mut scenario_val;
 
         test_utils::claim_xp(scenario, get_USER_1());
 
-        test_utils::add_reward(scenario);
+        test_utils::add_coin_reward(scenario);
         test_utils::claim_reward(scenario, get_USER_1(), get_REWARD_LVL());
         test_utils::claim_reward(scenario, get_USER_1(), get_REWARD_LVL());
 
@@ -173,7 +173,7 @@ module loyalty_gm::token_tests {
 
     #[test]
     #[expected_failure(abort_code = loyalty_gm::reward_store::ERewardPoolExceeded)]
-    fun claim_exceeded_reward() {
+    fun claim_exceeded_coin_reward() {
         let (scenario_val, quest_id) = init_add_quest(0, 0);
         let scenario = &mut scenario_val;
         test_utils::get_verifier(scenario);
@@ -198,7 +198,7 @@ module loyalty_gm::token_tests {
 
     #[test]
     #[expected_failure(abort_code = loyalty_gm::loyalty_token::EInvalidLvl)]
-    fun claim_reward_invalid_lvl() {
+    fun claim_coin_reward_invalid_lvl() {
         let (scenario_val, quest_id) = init_add_quest(0, 0);
         let scenario = &mut scenario_val;
         test_utils::get_verifier(scenario);
