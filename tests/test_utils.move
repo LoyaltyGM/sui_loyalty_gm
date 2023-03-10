@@ -200,6 +200,48 @@ module loyalty_gm::test_utils {
         };
     }
 
+    public fun add_nft_reward(scenario: &mut Scenario) {
+        test_scenario::next_tx(scenario, ADMIN);
+        {
+            let ls = test_scenario::take_shared<LoyaltySystem>(scenario);
+            let admin_cap = test_scenario::take_from_sender<AdminCap>(scenario);
+
+            loyalty_system::add_nft_reward(
+                &admin_cap,
+                &mut ls,
+                REWARD_LVL,
+                b"https://example.com",
+                b"nft reward",
+                REWARD_SUPPLY,
+                test_scenario::ctx(scenario)
+            );
+
+            test_scenario::return_shared(ls);
+            test_scenario::return_to_sender(scenario, admin_cap);
+        };
+    }
+
+    public fun add_soulbond_reward(scenario: &mut Scenario) {
+        test_scenario::next_tx(scenario, ADMIN);
+        {
+            let ls = test_scenario::take_shared<LoyaltySystem>(scenario);
+            let admin_cap = test_scenario::take_from_sender<AdminCap>(scenario);
+
+            loyalty_system::add_soulbond_reward(
+                &admin_cap,
+                &mut ls,
+                REWARD_LVL,
+                b"https://example.com",
+                b"soulbond reward",
+                REWARD_SUPPLY,
+                test_scenario::ctx(scenario)
+            );
+
+            test_scenario::return_shared(ls);
+            test_scenario::return_to_sender(scenario, admin_cap);
+        };
+    }
+
     public fun add_fail_pool_reward(scenario: &mut Scenario) {
         test_scenario::next_tx(scenario, ADMIN);
         {

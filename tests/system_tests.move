@@ -295,6 +295,48 @@ module loyalty_gm::system_tests {
     }
 
     #[test]
+    fun add_nft_reward() {
+        let scenario_val = init_create_loyalty_system();
+        let scenario = &mut scenario_val;
+            
+        test_utils::add_nft_reward(scenario);
+    
+        test_scenario::next_tx(scenario, get_ADMIN());
+        {
+            let ls = test_scenario::take_shared<LoyaltySystem>(scenario);
+
+            assert!(vec_map::size(loyalty_system::get_rewards(&ls)) == 1, Error);
+            let (_, reward) = vec_map::get_entry_by_idx(loyalty_system::get_rewards(&ls), 0);
+            print(reward);
+
+            test_scenario::return_shared(ls);
+        };
+
+        test_scenario::end(scenario_val);
+    }
+
+    #[test]
+    fun add_soulbond_reward() {
+        let scenario_val = init_create_loyalty_system();
+        let scenario = &mut scenario_val;
+            
+        test_utils::add_soulbond_reward(scenario);
+    
+        test_scenario::next_tx(scenario, get_ADMIN());
+        {
+            let ls = test_scenario::take_shared<LoyaltySystem>(scenario);
+
+            assert!(vec_map::size(loyalty_system::get_rewards(&ls)) == 1, Error);
+            let (_, reward) = vec_map::get_entry_by_idx(loyalty_system::get_rewards(&ls), 0);
+            print(reward);
+
+            test_scenario::return_shared(ls);
+        };
+
+        test_scenario::end(scenario_val);
+    }
+
+    #[test]
     #[expected_failure(abort_code = loyalty_gm::reward_store::EInvalidSupply)]
     fun add_invalid_supply_coin_reward() {
         let scenario_val = init_create_loyalty_system();
