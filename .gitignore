@@ -2,3 +2,5 @@ build/*
 *sui.log*
 .DS_Store
 .idea
+.coverage_map.mvcov
+.trace
