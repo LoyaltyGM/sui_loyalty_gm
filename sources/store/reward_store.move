@@ -4,9 +4,9 @@
     Its functions are only accessible by the friend modules.
 */
 module loyalty_gm::reward_store {
+    use std::option::{Self, Option};
     use std::string::{Self, String};
     use std::vector;
-    use std::option::{Self, Option};
 
     use sui::balance::{Self, Balance};
     use sui::coin::{Self, Coin};
@@ -18,8 +18,8 @@ module loyalty_gm::reward_store {
     use sui::table;
     use sui::transfer;
     use sui::tx_context::{Self, TxContext};
-    use sui::vec_map::{Self, VecMap};
     use sui::url::{Self, Url};
+    use sui::vec_map::{Self, VecMap};
 
     friend loyalty_gm::loyalty_system;
     friend loyalty_gm::loyalty_token;
@@ -281,7 +281,7 @@ module loyalty_gm::reward_store {
 
             transfer::transfer(soulbond_reward, sender);
         } else {
-            abort(EInvalidRewardType)
+            abort (EInvalidRewardType)
         };
 
         set_reward_claimed(reward, ctx);

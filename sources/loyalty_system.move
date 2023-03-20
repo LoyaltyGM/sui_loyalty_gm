@@ -4,9 +4,9 @@
     Module for creating and managing loyalty systems by the admin and verifying quests by the verifier.
 */
 module loyalty_gm::loyalty_system {
+    use std::option;
     use std::string::{Self, String};
     use std::vector::length;
-    use std::option::{Self};
 
     use sui::coin::Coin;
     use sui::dynamic_object_field as dof;
@@ -19,9 +19,9 @@ module loyalty_gm::loyalty_system {
     use sui::url::{Self, Url};
     use sui::vec_map::{Self, VecMap};
 
+    use loyalty_gm::quest_store::{Self, Quest};
     use loyalty_gm::reward_store::{Self, Reward};
     use loyalty_gm::system_store::{Self, SystemStore, SYSTEM_STORE};
-    use loyalty_gm::quest_store::{Self, Quest};
     use loyalty_gm::user_store::{Self, User};
 
     friend loyalty_gm::loyalty_token;

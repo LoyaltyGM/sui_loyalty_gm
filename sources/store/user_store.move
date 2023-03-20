@@ -30,10 +30,13 @@ module loyalty_gm::user_store {
         token_id: ID,
         /// Address of the user that data belongs to.
         owner: address,
+        /// Current level of the user.
+        level: u64,
         /// Quests that are currently active.
         active_quests: VecSet<ID>,
         /// Quests that are already done.
         done_quests: VecSet<ID>,
+        total_xp: u64,
         /// XP that can be claimed by the user. It is reset to INITIAL_XP after claiming.
         claimable_xp: u64,
     }
@@ -59,9 +62,11 @@ module loyalty_gm::user_store {
         let owner = tx_context::sender(ctx);
         let data = User {
             token_id: *token_id,
+            level: 0,
             active_quests: vec_set::empty(),
             done_quests: vec_set::empty(),
             owner,
+            total_xp: 0,
             claimable_xp: INITIAL_XP,
         };
 
@@ -115,6 +120,16 @@ module loyalty_gm::user_store {
         vec_set::insert(&mut user_data.done_quests, *quest_id);
 
         update_user_xp(store, owner, reward_xp)
+    }
+
+    public(friend) fun update_user_lvl(store: &mut Table<address, User>, owner: address, new_lvl: u64) {
+        let user_data = table::borrow_mut<address, User>(store, owner);
+        user_data.level = new_lvl;
+    }
+
+    public(friend) fun update_user_total_xp(store: &mut Table<address, User>, owner: address, new_total_xp: u64) {
+        let user_data = table::borrow_mut<address, User>(store, owner);
+        user_data.total_xp = new_total_xp;
     }
 
     /**

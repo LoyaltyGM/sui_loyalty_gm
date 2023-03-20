@@ -4,9 +4,9 @@
     Its functions are only accessible by the friend modules.
 */
 module loyalty_gm::quest_store {
+    use std::option::{Self, Option};
     use std::string::{Self, String};
     use std::vector;
-    use std::option::{Self, Option};
 
     use sui::event::emit;
     use sui::object::{Self, ID};

@@ -14,8 +14,8 @@ module loyalty_gm::loyalty_token {
     use sui::url::Url;
 
     use loyalty_gm::loyalty_system::{Self, LoyaltySystem};
-    use loyalty_gm::reward_store;
     use loyalty_gm::quest_store;
+    use loyalty_gm::reward_store;
     use loyalty_gm::user_store;
 
     // ======== Constants =========
@@ -125,7 +125,7 @@ module loyalty_gm::loyalty_token {
 
         user_store::reset_user_xp(loyalty_system::get_mut_user_store(ls), sender);
 
-        update_token_stats(claimable_xp, ls, token);
+        update_token_stats(sender, claimable_xp, ls, token);
     }
 
     /**
@@ -171,6 +171,7 @@ module loyalty_gm::loyalty_token {
         Update the token's level and XP based on the given XP to add.
     */
     fun update_token_stats(
+        owner: address,
         xp_to_add: u64,
         ls: &mut LoyaltySystem,
         token: &mut LoyaltyToken,
@@ -183,6 +184,9 @@ module loyalty_gm::loyalty_token {
 
         let max_lvl = loyalty_system::get_max_lvl(ls);
         token.level = if (new_lvl <= max_lvl) new_lvl else max_lvl;
+
+        user_store::update_user_total_xp(loyalty_system::get_mut_user_store(ls), owner, new_xp);
+        user_store::update_user_lvl(loyalty_system::get_mut_user_store(ls), owner, new_lvl);
     }
 
     /**
