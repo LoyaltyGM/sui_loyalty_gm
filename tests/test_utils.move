@@ -93,7 +93,7 @@ module loyalty_gm::test_utils {
 
     public fun mint_sui(scenario: &mut Scenario) {
         let coin = coin::mint_for_testing<SUI>(REWARD_POOL_AMT, test_scenario::ctx(scenario));
-        transfer::transfer(coin, ADMIN);
+        transfer::public_transfer(coin, ADMIN);
     }
 
     public fun create_system_store(scenario: &mut Scenario) {

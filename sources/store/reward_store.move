@@ -223,7 +223,7 @@ module loyalty_gm::reward_store {
         let (_, reward) = vec_map::remove(store, &level);
 
         let sui_amt = balance::value(&reward.reward_pool);
-        transfer::transfer(
+        transfer::public_transfer(
             coin::take(&mut reward.reward_pool, sui_amt, ctx),
             tx_context::sender(ctx)
         );
@@ -251,7 +251,7 @@ module loyalty_gm::reward_store {
             let reward_per_user = *option::borrow(&reward.reward_per_user);
             assert!(pool_amt >= reward_per_user, ERewardPoolExceeded);
 
-            transfer::transfer(
+            transfer::public_transfer(
                 coin::take(&mut reward.reward_pool, reward_per_user, ctx),
                 sender
             );
