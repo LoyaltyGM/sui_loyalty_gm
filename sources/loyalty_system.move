@@ -5,7 +5,7 @@
 */
 module loyalty_gm::loyalty_system {
     use std::option;
-    use std::string::{Self, String};
+    use std::string::{Self, String, utf8};
     use std::vector::length;
 
     use sui::coin::Coin;
@@ -14,10 +14,12 @@ module loyalty_gm::loyalty_system {
     use sui::object::{Self, UID, ID};
     use sui::sui::SUI;
     use sui::table::Table;
-    use sui::transfer;
-    use sui::tx_context::{Self, TxContext};
+    use sui::transfer::{public_transfer, transfer, share_object};
+    use sui::tx_context::{sender, TxContext};
     use sui::url::{Self, Url};
     use sui::vec_map::{Self, VecMap};
+    use sui::package;
+    use sui::display;
 
     use loyalty_gm::quest_store::{Self, Quest};
     use loyalty_gm::reward_store::{Self, Reward};
@@ -46,6 +48,8 @@ module loyalty_gm::loyalty_system {
         Admin capability to manage the loyalty system.
         Created separately for each system.
     */
+    struct LOYALTY_SYSTEM has drop {}
+
     struct AdminCap has key, store {
         id: UID,
         name: String,
@@ -109,11 +113,54 @@ module loyalty_gm::loyalty_system {
 
     // ======== Init =========
 
-    /// Transfer to publisher VerifierCap
-    fun init(ctx: &mut TxContext) {
-        transfer::transfer(VerifierCap {
+    fun init(otw: LOYALTY_SYSTEM, ctx: &mut TxContext) {
+        let ls_keys = vector[
+            utf8(b"name"),
+            utf8(b"description"),
+            utf8(b"image_url"),
+            utf8(b"creator"),
+            utf8(b"project_url"),
+        ];
+
+        let ls_values = vector[
+            utf8(b"{name}"),
+            utf8(b"{description}"),
+            utf8(b"{url}"),
+            utf8(b"{creator}"),
+            utf8(b"https://www.loyaltygm.com"),
+        ];
+
+        let ac_keys = vector[
+            utf8(b"name"),
+            utf8(b"description"),
+            utf8(b"image_url"),
+            utf8(b"project_url"),
+        ];
+
+        let ac_values = vector[
+            utf8(b"{name}"),
+            utf8(b"{description}"),
+            utf8(b"{url}"),
+            utf8(b"https://www.loyaltygm.com"),
+        ];
+
+        let publisher = package::claim(otw, ctx);
+        let ls_display = display::new_with_fields<LoyaltySystem>(
+            &publisher, ls_keys, ls_values, ctx
+        );
+        let ac_display = display::new_with_fields<AdminCap>(
+            &publisher, ac_keys, ac_values, ctx
+        );
+
+        display::update_version(&mut ls_display);
+        display::update_version(&mut ac_display);
+
+        public_transfer(ls_display, sender(ctx));
+        public_transfer(ac_display, sender(ctx));
+        public_transfer(publisher, sender(ctx));
+        transfer(VerifierCap {
             id: object::new(ctx)
-        }, tx_context::sender(ctx))
+        }, sender(ctx));
     }
 
     // ======== Admin Functions =========
@@ -136,12 +183,12 @@ module loyalty_gm::loyalty_system {
         assert!(length(&description) <= MAX_DESCRIPTION_LENGTH, ETextOverflow);
         assert!(max_lvl <= BASIC_MAX_LVL, EInvalidLevel);
 
-        let creator = tx_context::sender(ctx);
+        let creator = sender(ctx);
 
         let loyalty_system = LoyaltySystem {
             id: object::new(ctx),
-            name: string::utf8(name),
-            description: string::utf8(description),
+            name: utf8(name),
+            description: utf8(description),
             url: url::new_unsafe_from_bytes(url),
             total_minted: 0,
             max_supply,
@@ -154,8 +201,8 @@ module loyalty_gm::loyalty_system {
 
         let admin_cap = AdminCap {
             id: object::new(ctx),
-            name: string::utf8(b"Admin Cap"),
-            description: string::utf8(b"Allows to manage the loyalty system"),
+            name: utf8(b"Admin Cap"),
+            description: utf8(b"Allows to manage the loyalty system"),
             url: url::new_unsafe_from_bytes(ADMIN_CAP_URL),
             loyalty_system: object::uid_to_inner(&loyalty_system.id),
         };
@@ -168,8 +215,8 @@ module loyalty_gm::loyalty_system {
         });
 
         system_store::add_system(system_store, object::uid_to_inner(&loyalty_system.id), ctx);
-        transfer::share_object(loyalty_system);
-        transfer::transfer(admin_cap, creator);
+        share_object(loyalty_system);
+        transfer(admin_cap, creator);
     }
 
     // ======== Admin Functions: Update
@@ -177,7 +224,7 @@ module loyalty_gm::loyalty_system {
     public entry fun update_name(admin_cap: &AdminCap, loyalty_system: &mut LoyaltySystem, new_name: vector<u8>) {
         assert!(length(&new_name) <= MAX_NAME_LENGTH, ETextOverflow);
         check_admin(admin_cap, loyalty_system);
-        loyalty_system.name = string::utf8(new_name);
+        loyalty_system.name = utf8(new_name);
     }
 
     public entry fun update_description(
@@ -187,7 +234,7 @@ module loyalty_gm::loyalty_system {
     ) {
         assert!(length(&new_description) <= MAX_DESCRIPTION_LENGTH, ETextOverflow);
         check_admin(admin_cap, loyalty_system);
-        loyalty_system.description = string::utf8(new_description);
+        loyalty_system.description = utf8(new_description);
     }
 
     public entry fun update_url(admin_cap: &AdminCap, loyalty_system: &mut LoyaltySystem, new_url: vector<u8>) {
@@ -449,9 +496,9 @@ module loyalty_gm::loyalty_system {
 
     #[test_only]
     fun init_test(ctx: &mut TxContext) {
-        transfer::transfer(VerifierCap {
+        transfer(VerifierCap {
             id: object::new(ctx)
-        }, tx_context::sender(ctx))
+        }, sender(ctx))
     }
 
     #[test_only]

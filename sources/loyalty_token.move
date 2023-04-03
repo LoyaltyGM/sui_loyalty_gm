@@ -4,14 +4,16 @@
     Module for minting and managing Loyalty NFT by users.
 */
 module loyalty_gm::loyalty_token {
-    use std::string::{Self, String};
+    use std::string::{String, utf8};
 
     use sui::event::emit;
     use sui::math;
     use sui::object::{Self, UID, ID};
-    use sui::transfer;
-    use sui::tx_context::{Self, TxContext};
+    use sui::transfer::{public_transfer, transfer};
+    use sui::tx_context::{TxContext, sender};
     use sui::url::Url;
+    use sui::package;
+    use sui::display;
 
     use loyalty_gm::loyalty_system::{Self, LoyaltySystem};
     use loyalty_gm::quest_store;
@@ -31,6 +33,7 @@ module loyalty_gm::loyalty_token {
 
     // ======== Structs =========
 
+    struct LOYALTY_TOKEN has drop {}
 
     /**
         LoyaltyToken struct.
@@ -58,13 +61,41 @@ module loyalty_gm::loyalty_token {
         object_id: ID,
         loyalty_system: ID,
         minter: address,
-        name: string::String,
+        name: String,
     }
 
     struct ClaimXpEvent has copy, drop {
         token_id: ID,
         claimer: address,
         claimed_xp: u64,
+    }
+
+    // ======= Functions =======
+
+    fun init(otw: LOYALTY_TOKEN, ctx: &mut TxContext) {
+        let keys = vector[
+            utf8(b"name"),
+            utf8(b"description"),
+            utf8(b"image_url"),
+            utf8(b"project_url"),
+        ];
+
+        let values = vector[
+            utf8(b"{name}"),
+            utf8(b"{description}"),
+            utf8(b"{url}"),
+            utf8(b"https://www.loyaltygm.com"),
+        ];
+
+        let publisher = package::claim(otw, ctx);
+        let display = display::new_with_fields<LoyaltyToken>(
+            &publisher, keys, values, ctx
+        );
+
+        display::update_version(&mut display);
+
+        public_transfer(display, sender(ctx));
+        public_transfer(publisher, sender(ctx));
     }
 
 
@@ -90,7 +121,7 @@ module loyalty_gm::loyalty_token {
             xp: INITIAL_XP,
             xp_to_next_lvl: get_xp_to_next_lvl(INITIAL_LVL, INITIAL_XP),
         };
-        let sender = tx_context::sender(ctx);
+        let sender = sender(ctx);
 
         emit(MintTokenEvent {
             object_id: object::id(&nft),
@@ -100,7 +131,7 @@ module loyalty_gm::loyalty_token {
         });
 
         user_store::add_user(loyalty_system::get_mut_user_store(ls), &object::id(&nft), ctx);
-        transfer::transfer(nft, sender);
+        transfer(nft, sender);
     }
 
     /**
@@ -113,7 +144,7 @@ module loyalty_gm::loyalty_token {
         token: &mut LoyaltyToken,
         ctx: &mut TxContext
     ) {
-        let sender = tx_context::sender(ctx);
+        let sender = sender(ctx);
         let claimable_xp = user_store::get_user_xp(loyalty_system::get_user_store(ls), sender);
         assert!(claimable_xp > 0, ENoClaimableXp);
 
@@ -162,7 +193,7 @@ module loyalty_gm::loyalty_token {
             EInvalidLvl
         );
         quest_store::increment_quest_started_count(loyalty_system::get_mut_quests(loyalty_system), &quest_id);
-        user_store::start_quest(loyalty_system::get_mut_user_store(loyalty_system), &quest_id, tx_context::sender(ctx))
+        user_store::start_quest(loyalty_system::get_mut_user_store(loyalty_system), &quest_id, sender(ctx))
     }
 
     // ======= Private and Utility functions =======

@@ -5,7 +5,7 @@
 */
 module loyalty_gm::reward_store {
     use std::option::{Self, Option};
-    use std::string::{Self, String};
+    use std::string::{String, utf8};
     use std::vector;
 
     use sui::balance::{Self, Balance};
@@ -16,10 +16,12 @@ module loyalty_gm::reward_store {
     use sui::pay;
     use sui::sui::SUI;
     use sui::table;
-    use sui::transfer;
-    use sui::tx_context::{Self, TxContext};
+    use sui::transfer::{transfer, public_transfer};
+    use sui::tx_context::{TxContext, sender};
     use sui::url::{Self, Url};
     use sui::vec_map::{Self, VecMap};
+    use sui::package;
+    use sui::display;
 
     friend loyalty_gm::loyalty_system;
     friend loyalty_gm::loyalty_token;
@@ -47,6 +49,8 @@ module loyalty_gm::reward_store {
     const EInvalidRewardType: u64 = 3;
 
     // ======== Structs =========
+
+    struct REWARD_STORE has drop {}
 
     /**
         Reward struct.
@@ -117,9 +121,41 @@ module loyalty_gm::reward_store {
         /// Type of the Reward
         type: u64,
         /// Description of the Reward
-        description: string::String,
+        description: String,
     }
 
+    // ======== Functions =========
+
+    fun init(otw: REWARD_STORE, ctx: &mut TxContext) {
+        let keys = vector[
+            utf8(b"name"),
+            utf8(b"description"),
+            utf8(b"image_url"),
+            utf8(b"project_url"),
+        ];
+
+        let values = vector[
+            utf8(b"{name}"),
+            utf8(b"{description}"),
+            utf8(b"{url}"),
+            utf8(b"https://www.loyaltygm.com"),
+        ];
+
+        let publisher = package::claim(otw, ctx);
+        let nft_display = display::new_with_fields<NftReward>(
+            &publisher, keys, values, ctx
+        );
+        let soulbond_display = display::new_with_fields<SoulbondReward>(
+            &publisher, keys, values, ctx
+        );
+
+        display::update_version(&mut nft_display);
+        display::update_version(&mut soulbond_display);
+
+        public_transfer(nft_display, sender(ctx));
+        public_transfer(soulbond_display, sender(ctx));
+        public_transfer(publisher, sender(ctx));
+    }
 
     // ======== Public functions =========
 
@@ -163,7 +199,7 @@ module loyalty_gm::reward_store {
             id: object::new(ctx),
             type: COIN_REWARD_TYPE,
             level,
-            description: string::utf8(description),
+            description: utf8(description),
             reward_pool: balance,
             reward_supply,
             reward_per_user: option::some(balance_val / reward_supply),
@@ -223,9 +259,9 @@ module loyalty_gm::reward_store {
         let (_, reward) = vec_map::remove(store, &level);
 
         let sui_amt = balance::value(&reward.reward_pool);
-        transfer::public_transfer(
+        public_transfer(
             coin::take(&mut reward.reward_pool, sui_amt, ctx),
-            tx_context::sender(ctx)
+            sender(ctx)
         );
 
         delete_reward(reward);
@@ -244,14 +280,14 @@ module loyalty_gm::reward_store {
     ) {
         check_claimed(reward, ctx);
 
-        let sender = tx_context::sender(ctx);
+        let sender = sender(ctx);
 
         if (reward.type == COIN_REWARD_TYPE && option::is_some(&reward.reward_per_user)) {
             let pool_amt = balance::value(&reward.reward_pool);
             let reward_per_user = *option::borrow(&reward.reward_per_user);
             assert!(pool_amt >= reward_per_user, ERewardPoolExceeded);
 
-            transfer::public_transfer(
+            public_transfer(
                 coin::take(&mut reward.reward_pool, reward_per_user, ctx),
                 sender
             );
@@ -261,25 +297,25 @@ module loyalty_gm::reward_store {
                 level: reward.level,
                 loyalty_system,
                 reward_id: object::id(reward),
-                name: string::utf8(NFT_REWARD_NAME),
+                name: utf8(NFT_REWARD_NAME),
                 description: reward.description,
                 claimer: sender,
                 url: *option::borrow(&reward.url),
             };
 
-            transfer::transfer(nft_reward, sender);
+            transfer(nft_reward, sender);
         } else if (reward.type == SOULBOND_REWARD_TYPE) {
             let soulbond_reward = SoulbondReward {
                 id: object::new(ctx),
                 level: reward.level,
                 loyalty_system,
                 reward_id: object::id(reward),
-                name: string::utf8(SOULBOND_REWARD_NAME),
+                name: utf8(SOULBOND_REWARD_NAME),
                 description: reward.description,
                 url: *option::borrow(&reward.url),
             };
 
-            transfer::transfer(soulbond_reward, sender);
+            transfer(soulbond_reward, sender);
         } else {
             abort (EInvalidRewardType)
         };
@@ -304,7 +340,7 @@ module loyalty_gm::reward_store {
             id: object::new(ctx),
             type,
             level,
-            description: string::utf8(description),
+            description: utf8(description),
             reward_pool: balance::zero(),
             reward_supply,
             reward_per_user: option::none(),
@@ -334,7 +370,7 @@ module loyalty_gm::reward_store {
     fun set_reward_claimed(reward: &mut Reward, ctx: &mut TxContext) {
         table::add<address, bool>(
             dof::borrow_mut(&mut reward.id, REWARD_RECIPIENTS_KEY),
-            tx_context::sender(ctx),
+            sender(ctx),
             true
         );
     }
@@ -346,7 +382,7 @@ module loyalty_gm::reward_store {
         assert!(
             !table::contains<address, bool>(
                 dof::borrow(&reward.id, REWARD_RECIPIENTS_KEY),
-                tx_context::sender(ctx)
+                sender(ctx)
             ),
             EAlreadyClaimed
         );
