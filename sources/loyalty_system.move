@@ -258,8 +258,7 @@ module loyalty_gm::loyalty_system {
         loyalty_system: &mut LoyaltySystem,
         level: u64,
         description: vector<u8>,
-        coins: vector<Coin<SUI>>,
-        reward_pool: u64,
+        reward_pool: Coin<SUI>,
         reward_supply: u64,
         ctx: &mut TxContext
     ) {
@@ -270,7 +269,6 @@ module loyalty_gm::loyalty_system {
             &mut loyalty_system.rewards,
             level,
             description,
-            coins,
             reward_pool,
             reward_supply,
             ctx

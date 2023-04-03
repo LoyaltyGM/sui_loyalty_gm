@@ -6,14 +6,12 @@
 module loyalty_gm::reward_store {
     use std::option::{Self, Option};
     use std::string::{String, utf8};
-    use std::vector;
 
     use sui::balance::{Self, Balance};
     use sui::coin::{Self, Coin};
     use sui::dynamic_object_field as dof;
     use sui::event::emit;
     use sui::object::{Self, UID, ID};
-    use sui::pay;
     use sui::sui::SUI;
     use sui::table;
     use sui::transfer::{transfer, public_transfer};
@@ -176,22 +174,11 @@ module loyalty_gm::reward_store {
         store: &mut VecMap<u64, Reward>,
         level: u64,
         description: vector<u8>,
-        coins: vector<Coin<SUI>>,
-        reward_pool: u64,
+        reward_pool: Coin<SUI>,
         reward_supply: u64,
         ctx: &mut TxContext
     ) {
-        let coin = vector::pop_back(&mut coins);
-        pay::join_vec(&mut coin, coins);
-        let received_coin = coin::split(&mut coin, reward_pool, ctx);
-
-        if (coin::value(&coin) == 0) {
-            coin::destroy_zero(coin);
-        } else {
-            pay::keep(coin, ctx);
-        };
-
-        let balance = coin::into_balance(received_coin);
+        let balance = coin::into_balance(reward_pool);
         let balance_val = balance::value(&balance);
         assert!(balance_val % reward_supply == 0, EInvalidSupply);
 

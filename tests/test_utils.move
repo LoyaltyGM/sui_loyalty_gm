@@ -180,17 +180,14 @@ module loyalty_gm::test_utils {
             let ls = test_scenario::take_shared<LoyaltySystem>(scenario);
             let admin_cap = test_scenario::take_from_sender<AdminCap>(scenario);
 
-            let coin1 = test_scenario::take_from_sender<Coin<SUI>>(scenario);
-            let coins = vector::empty();
-            vector::push_back(&mut coins, coin1);
+            let coin = test_scenario::take_from_sender<Coin<SUI>>(scenario);
 
             loyalty_system::add_coin_reward(
                 &admin_cap,
                 &mut ls,
                 REWARD_LVL,
                 b"reward description",
-                coins,
-                REWARD_POOL_AMT,
+                coin,
                 REWARD_SUPPLY,
                 test_scenario::ctx(scenario)
             );
@@ -247,17 +244,14 @@ module loyalty_gm::test_utils {
         {
             let ls = test_scenario::take_shared<LoyaltySystem>(scenario);
             let admin_cap = test_scenario::take_from_sender<AdminCap>(scenario);
-            let coin1 = test_scenario::take_from_sender<Coin<SUI>>(scenario);
-            let coins = vector::empty();
-            vector::push_back(&mut coins, coin1);
+            let coin = test_scenario::take_from_sender<Coin<SUI>>(scenario);
 
             loyalty_system::add_coin_reward(
                 &admin_cap,
                 &mut ls,
                 REWARD_LVL,
                 b"reward description",
-                coins,
-                REWARD_POOL_AMT,
+                coin,
                 99,
                 test_scenario::ctx(scenario)
             );
@@ -272,17 +266,14 @@ module loyalty_gm::test_utils {
         {
             let ls = test_scenario::take_shared<LoyaltySystem>(scenario);
             let admin_cap = test_scenario::take_from_sender<AdminCap>(scenario);
-            let coin1 = test_scenario::take_from_sender<Coin<SUI>>(scenario);
-            let coins = vector::empty();
-            vector::push_back(&mut coins, coin1);
+            let coin = test_scenario::take_from_sender<Coin<SUI>>(scenario);
 
             loyalty_system::add_coin_reward(
                 &admin_cap,
                 &mut ls,
                 LS_MAX_LVL + 1,
                 b"reward description",
-                coins,
-                REWARD_POOL_AMT,
+                coin,
                 REWARD_SUPPLY,
                 test_scenario::ctx(scenario)
             );
@@ -297,17 +288,14 @@ module loyalty_gm::test_utils {
         {
             let ls = test_scenario::take_shared<LoyaltySystem>(scenario);
             let admin_cap = test_scenario::take_from_sender<AdminCap>(scenario);
-            let coin1 = test_scenario::take_from_sender<Coin<SUI>>(scenario);
-            let coins = vector::empty();
-            vector::push_back(&mut coins, coin1);
+            let coin = test_scenario::take_from_sender<Coin<SUI>>(scenario);
 
             loyalty_system::add_coin_reward(
                 &admin_cap,
                 &mut ls,
                 REWARD_LVL,
                 b"reward description",
-                coins,
-                REWARD_POOL_AMT,
+                coin,
                 1,
                 test_scenario::ctx(scenario)
             );
