@@ -6,7 +6,7 @@ module loyalty_gm::system_store {
     use std::vector;
 
     use sui::object::{Self, UID, ID};
-    use sui::transfer;
+    use sui::transfer::share_object;
     use sui::tx_context::TxContext;
 
     friend loyalty_gm::loyalty_system;
@@ -35,7 +35,7 @@ module loyalty_gm::system_store {
             systems: vector::empty<ID>()
         };
 
-        transfer::share_object(store)
+        share_object(store)
     }
 
     // ======== Public functions =========

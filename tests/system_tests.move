@@ -298,9 +298,9 @@ module loyalty_gm::system_tests {
     fun add_nft_reward() {
         let scenario_val = init_create_loyalty_system();
         let scenario = &mut scenario_val;
-            
+
         test_utils::add_nft_reward(scenario);
-    
+
         test_scenario::next_tx(scenario, get_ADMIN());
         {
             let ls = test_scenario::take_shared<LoyaltySystem>(scenario);
@@ -319,9 +319,9 @@ module loyalty_gm::system_tests {
     fun add_soulbond_reward() {
         let scenario_val = init_create_loyalty_system();
         let scenario = &mut scenario_val;
-            
+
         test_utils::add_soulbond_reward(scenario);
-    
+
         test_scenario::next_tx(scenario, get_ADMIN());
         {
             let ls = test_scenario::take_shared<LoyaltySystem>(scenario);
